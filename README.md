@@ -4,6 +4,12 @@
 
 本目录包含两次大作业的完整静态网站，均为纯前端（HTML + CSS + JavaScript）实现，无任何外部依赖，可离线打开，也可直接部署到任意静态托管平台。
 
+## 已部署网址（GitHub Pages）
+
+- 作品导航：<https://huihuhi669.github.io/microgrid-hw/>
+- 第二次作业（控制框图仿真）：<https://huihuhi669.github.io/microgrid-hw/hw2-control/>
+- 第三次作业（EMS 界面）：<https://huihuhi669.github.io/microgrid-hw/hw3-ems/>
+
 ## 目录结构
 
 ```
