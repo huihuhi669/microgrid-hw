@@ -56,7 +56,7 @@ body{
 .state-pill .dot{width:7px; height:7px; border-radius:50%; background:var(--sky); box-shadow:0 0 0 0 rgba(56,189,248,.6); animation:pulse 1.8s infinite}
 @keyframes pulse{70%{box-shadow:0 0 0 7px rgba(56,189,248,0)}100%{box-shadow:0 0 0 0 rgba(56,189,248,0)}}
 /* layout */
-.wrap{max-width:1580px; margin:0 auto; padding:16px 20px 28px; display:grid; grid-template-columns:minmax(0,1.5fr) minmax(330px,.85fr); gap:16px; align-items:start}
+.wrap{max-width:1580px; margin:0 auto; padding:16px 20px 28px; display:grid; grid-template-columns:minmax(0,1.5fr) minmax(330px,.85fr); gap:16px; align-items:stretch}
 .card{background:linear-gradient(180deg, rgba(16,28,47,.85), rgba(11,19,33,.9)); border:1px solid var(--line); border-radius:var(--radius); box-shadow:0 12px 32px rgba(0,0,0,.25)}
 .card-head{display:flex; align-items:center; justify-content:space-between; gap:12px; padding:14px 18px 0}
 .card-head h2{font-size:14.5px; margin:0; font-weight:650; letter-spacing:.3px}
@@ -75,8 +75,8 @@ body{
 .kpi.good b{color:#8ff0b5}
 .kpi.warn b{color:#ffd98a}
 /* topology */
-.topo-card{padding-bottom:6px}
-.topo-svg{width:100%; height:auto; display:block; padding:4px 6px 0}
+.topo-card{padding-bottom:6px; display:flex; flex-direction:column}
+.topo-svg{width:100%; height:auto; display:block; padding:4px 6px 0; margin:auto 0}
 .bus-line{stroke:rgba(56,189,248,.55); stroke-width:3; stroke-linecap:round}
 .bus-label{fill:#6e8bb0; font-size:11px; text-anchor:middle; font-family:inherit}
 .flow{fill:none; stroke:#2f4a70; stroke-width:1.4; stroke-dasharray:7 9; animation:flowdash 1.3s linear infinite; transition:stroke .3s, opacity .3s}
@@ -532,7 +532,7 @@ function renderLog(){
   var el=$('#logList');
   if(!sim.log.length){ el.innerHTML='<li class="empty">暂无日志</li>'; return; }
   el.innerHTML=sim.log.map(function(e){
-    return '<li class="'+e.tone+'">'+e.text+'</li>';
+    return '<li class="'+e.tone+'">'+e.t+'</li>';
   }).join('');
 }
 function hexA(hex,a){
