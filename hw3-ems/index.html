@@ -1,0 +1,931 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="author" content="吴浩辉 202410132011">
+<meta name="description" content="微电网能量管理系统（EMS）交互仿真平台 — 吴浩辉 202410132011">
+<title>微电网能量管理系统 EMS 仿真 · 吴浩辉 202410132011</title>
+<style>
+:root{
+  --bg:#070d18; --card:#0e1829; --card2:#122038;
+  --line:#1f2f49; --line2:#2a3d5c;
+  --text:#e8eef9; --muted:#93a5c0; --dim:#5f7391;
+  --cyan:#2dd4bf; --blue:#60a5fa; --amber:#fbbf24; --red:#fb7185;
+  --green:#4ade80; --violet:#a78bfa; --sky:#38bdf8; --orange:#fb923c;
+  --radius:14px;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{
+  background:
+    radial-gradient(1100px 520px at 10% -8%, rgba(96,165,250,.11), transparent 60%),
+    radial-gradient(900px 480px at 95% 0%, rgba(45,212,191,.09), transparent 55%),
+    var(--bg);
+  color:var(--text);
+  font-family:"Segoe UI","Microsoft YaHei","PingFang SC",system-ui,-apple-system,sans-serif;
+  min-height:100vh; -webkit-font-smoothing:antialiased;
+  font-size:14px; line-height:1.5;
+}
+/* header */
+.topbar{
+  display:flex; align-items:center; gap:18px; flex-wrap:wrap;
+  padding:14px 26px; border-bottom:1px solid var(--line);
+  background:linear-gradient(180deg, rgba(16,27,46,.92), rgba(8,14,26,.8));
+  backdrop-filter:blur(10px);
+  position:sticky; top:0; z-index:30;
+}
+.brand{display:flex; align-items:center; gap:13px; min-width:0; flex:1}
+.logo{
+  width:42px; height:42px; border-radius:11px; flex:none;
+  display:grid; place-items:center; font-weight:800; letter-spacing:.5px;
+  color:#05141a; font-size:15px;
+  background:linear-gradient(140deg,#7dd3fc,#38bdf8 55%,#2dd4bf);
+  box-shadow:0 6px 18px rgba(56,189,248,.25);
+}
+.brand h1{font-size:17px; margin:0; font-weight:650; letter-spacing:.2px}
+.brand p{margin:2px 0 0; font-size:12px; color:var(--muted); letter-spacing:.2px}
+.who{text-align:right; padding:5px 14px; border-left:1px solid var(--line2); line-height:1.25}
+.who .n{font-size:14px; font-weight:650; letter-spacing:1px; color:#dce9ff}
+.who .i{font-size:12px; color:var(--sky); font-variant-numeric:tabular-nums; letter-spacing:.6px}
+.state-pill{
+  display:flex; align-items:center; gap:7px; font-size:12px; color:#bfe1ff;
+  padding:7px 13px; border-radius:999px; border:1px solid rgba(56,189,248,.35);
+  background:rgba(56,189,248,.08);
+}
+.state-pill .dot{width:7px; height:7px; border-radius:50%; background:var(--sky); box-shadow:0 0 0 0 rgba(56,189,248,.6); animation:pulse 1.8s infinite}
+@keyframes pulse{70%{box-shadow:0 0 0 7px rgba(56,189,248,0)}100%{box-shadow:0 0 0 0 rgba(56,189,248,0)}}
+/* layout */
+.wrap{max-width:1580px; margin:0 auto; padding:16px 20px 28px; display:grid; grid-template-columns:minmax(0,1.5fr) minmax(330px,.85fr); gap:16px; align-items:start}
+.card{background:linear-gradient(180deg, rgba(16,28,47,.85), rgba(11,19,33,.9)); border:1px solid var(--line); border-radius:var(--radius); box-shadow:0 12px 32px rgba(0,0,0,.25)}
+.card-head{display:flex; align-items:center; justify-content:space-between; gap:12px; padding:14px 18px 0}
+.card-head h2{font-size:14.5px; margin:0; font-weight:650; letter-spacing:.3px}
+.card-head .hint{font-size:11.5px; color:var(--dim)}
+/* KPI strip */
+.kpi-strip{
+  grid-column:1/-1; display:grid; grid-template-columns:repeat(6,1fr); gap:1px;
+  background:var(--line); border:1px solid var(--line); border-radius:var(--radius); overflow:hidden;
+}
+.kpi{background:#0c1626; padding:13px 16px}
+.kpi .lab{font-size:11px; color:var(--dim); letter-spacing:.3px; display:block}
+.kpi .val{display:flex; align-items:baseline; gap:4px; margin-top:4px}
+.kpi .val b{font-size:22px; font-weight:650; font-variant-numeric:tabular-nums; color:#eef6ff; letter-spacing:.3px}
+.kpi .val i{font-style:normal; font-size:11px; color:var(--muted)}
+.kpi .sub{font-size:10.5px; color:var(--dim); margin-top:1px; display:block}
+.kpi.good b{color:#8ff0b5}
+.kpi.warn b{color:#ffd98a}
+/* topology */
+.topo-card{padding-bottom:6px}
+.topo-svg{width:100%; height:auto; display:block; padding:4px 6px 0}
+.bus-line{stroke:rgba(56,189,248,.55); stroke-width:3; stroke-linecap:round}
+.bus-label{fill:#6e8bb0; font-size:11px; text-anchor:middle; font-family:inherit}
+.flow{fill:none; stroke:#2f4a70; stroke-width:1.4; stroke-dasharray:7 9; animation:flowdash 1.3s linear infinite; transition:stroke .3s, opacity .3s}
+@keyframes flowdash{to{stroke-dashoffset:-32}}
+.tnode rect{fill:#10203a; stroke:#294062; stroke-width:1.1}
+.tnode.source rect{stroke:rgba(251,191,36,.35)}
+.tnode.batt rect{stroke:rgba(74,222,128,.35)}
+.tnode.grid rect{stroke:rgba(129,140,248,.4)}
+.tnode.load rect{stroke:rgba(167,139,250,.4); fill:rgba(167,139,250,.07)}
+.t-title{fill:#dfeafb; font-size:13.5px; font-weight:600; text-anchor:middle; font-family:inherit}
+.t-val{fill:#8fe9dc; font-size:11.5px; text-anchor:middle; font-family:inherit; font-variant-numeric:tabular-nums}
+.t-sub{fill:#7088a8; font-size:10px; text-anchor:middle; font-family:inherit}
+.soc-bg{fill:#1a2b45}
+.soc-fill{fill:#4ade80; transition:width .3s}
+/* side column */
+.side{display:flex; flex-direction:column; gap:16px}
+/* control panel */
+.panel{padding-bottom:16px}
+.seg{display:flex; gap:6px; margin:12px 14px 0; padding:4px; background:#0b1525; border:1px solid var(--line); border-radius:10px}
+.seg button{
+  flex:1; font-family:inherit; font-size:12.5px; cursor:pointer; padding:7px 10px;
+  border-radius:7px; border:1px solid transparent; background:transparent; color:var(--muted); transition:.16s;
+}
+.seg button.active{background:linear-gradient(180deg,#1b3a55,#16293f); color:#bfe9ff; border-color:rgba(56,189,248,.35); font-weight:600}
+.field{display:flex; align-items:center; justify-content:space-between; gap:10px; margin:14px 14px 0; font-size:12px; color:var(--muted)}
+.field select{
+  font-family:inherit; font-size:12.5px; color:#dbeafe; background:#101d31; border:1px solid var(--line2);
+  padding:6px 10px; border-radius:8px; outline:none; cursor:pointer;
+}
+.field select:disabled{opacity:.5}
+.sliders{padding:2px 14px 0}
+.slider{display:block; padding:8px 0 4px}
+.sl-top{display:flex; align-items:baseline; gap:6px; font-size:11.5px; color:var(--muted)}
+.sl-top b{margin-left:auto; color:#dff3ff; font-size:12.5px; font-variant-numeric:tabular-nums}
+.sl-top i{font-style:normal; color:var(--dim); font-size:10.5px; min-width:36px; text-align:right}
+input[type=range]{-webkit-appearance:none; appearance:none; width:100%; height:4px; margin:8px 0 2px; border-radius:4px; background:#1b2b45; outline:none; cursor:pointer}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none; width:14px; height:14px; border-radius:50%; background:linear-gradient(180deg,#93c5fd,#3b82f6); border:2px solid #0a1a2e; box-shadow:0 0 0 3px rgba(59,130,246,.16); cursor:pointer}
+input[type=range]::-moz-range-thumb{width:12px; height:12px; border-radius:50%; background:#60a5fa; border:2px solid #0a1a2e}
+.btn-row{display:flex; gap:8px; padding:14px 14px 0}
+.btn{
+  flex:1; font-family:inherit; font-size:12.5px; cursor:pointer; padding:9px 12px; border-radius:9px;
+  border:1px solid var(--line2); background:#14233b; color:#c8d8f0; transition:.16s;
+}
+.btn:hover{background:#1a2c49; border-color:#395176; color:#eaf3ff}
+.btn.primary{background:linear-gradient(180deg,#38bdf8,#0ea5e9); border-color:transparent; color:#041a29; font-weight:650}
+.btn.primary:hover{filter:brightness(1.06)}
+.speed-row{display:flex; align-items:center; gap:6px; padding:12px 14px 0; font-size:11.5px; color:var(--dim)}
+.speed-row span{margin-right:4px}
+.speed-row button{
+  font-family:inherit; font-size:11.5px; cursor:pointer; padding:5px 11px; border-radius:7px;
+  border:1px solid var(--line); background:transparent; color:var(--muted);
+}
+.speed-row button.active{color:#bfe9ff; border-color:rgba(56,189,248,.4); background:rgba(56,189,248,.1)}
+.progress{height:5px; margin:14px 14px 0; border-radius:4px; background:#16253d; overflow:hidden}
+.progress > div{height:100%; width:0%; border-radius:4px; background:linear-gradient(90deg,#38bdf8,#2dd4bf); transition:width .2s}
+.clock{display:flex; align-items:baseline; justify-content:space-between; margin:8px 14px 0; font-size:11.5px; color:var(--dim)}
+.clock b{font-size:17px; color:#dff3ff; font-variant-numeric:tabular-nums; letter-spacing:.5px}
+.strategy-note{margin:10px 14px 0; font-size:11.3px; color:var(--dim); line-height:1.6; padding:9px 11px; border-radius:8px; background:rgba(20,35,59,.45); border-left:2px solid rgba(56,189,248,.4)}
+/* charts */
+.charts{grid-column:1/-1; display:grid; grid-template-columns:1.55fr 1fr 1fr; gap:1px; background:var(--line); overflow:hidden}
+.chart{background:#0c1626; padding:12px 14px 8px; min-width:0}
+.chart-head{display:flex; align-items:center; justify-content:space-between; gap:8px; margin-bottom:6px}
+.chart-head h3{font-size:12px; margin:0; font-weight:600; color:#c4d4ea; letter-spacing:.3px}
+.tag{font-size:10.5px; color:#9fd8ff; background:rgba(56,189,248,.1); border:1px solid rgba(56,189,248,.22); padding:2px 8px; border-radius:999px; font-variant-numeric:tabular-nums}
+.canvas-box{position:relative; height:210px}
+canvas{display:block; width:100%; height:100%}
+/* architecture & log */
+.bottom{grid-column:1/-1; display:grid; grid-template-columns:1.25fr 1fr; gap:16px}
+.arch-card{padding-bottom:16px}
+.arch{display:flex; align-items:stretch; gap:10px; padding:14px 16px 0; flex-wrap:wrap}
+.arch-node{
+  flex:1; min-width:150px; padding:11px 13px; border-radius:10px; background:#10203a;
+  border:1px solid #24405f; font-size:12.5px; color:#cfe3fa; line-height:1.35;
+}
+.arch-node small{display:block; margin-top:3px; font-size:10.5px; color:var(--dim); line-height:1.45}
+.arch-arrow{align-self:center; color:#3d6389; font-size:18px}
+.log-card{padding-bottom:10px}
+.log-list{list-style:none; margin:10px 14px 0; padding:0; display:flex; flex-direction:column; gap:5px; max-height:180px; overflow:auto}
+.log-list li{display:flex; gap:9px; font-size:11.4px; color:#b9c8de; padding:6px 10px; border-radius:7px; background:rgba(20,35,59,.5); border-left:2px solid #33496b}
+.log-list li.warn{border-left-color:var(--amber); color:#ffe6b0}
+.log-list li.bad{border-left-color:var(--red); color:#ffc9d2}
+.log-list li.ok{border-left-color:var(--green); color:#c3f8d2}
+.log-list li .t{color:var(--dim); font-variant-numeric:tabular-nums; flex:none}
+.log-list li.empty{color:var(--dim); border-left-color:transparent; background:transparent}
+/* footer */
+footer{max-width:1580px; margin:0 auto; padding:20px 22px 34px; display:flex; justify-content:space-between; gap:14px; flex-wrap:wrap; color:var(--dim); font-size:11.5px; border-top:1px solid rgba(31,47,73,.6)}
+footer .sig{color:#a9bdd9}
+footer .sig b{color:var(--sky); font-weight:600}
+@media (max-width:1180px){
+  .wrap{grid-template-columns:1fr}
+  .kpi-strip{grid-template-columns:repeat(3,1fr)}
+  .charts{grid-template-columns:1fr}
+  .bottom{grid-template-columns:1fr}
+}
+@media (max-width:640px){
+  .topbar{padding:12px 14px; gap:10px}
+  .brand h1{font-size:14.5px}
+  .brand p{display:none}
+  .who{padding:0 6px 0 10px}
+  .wrap{padding:12px 12px 24px}
+  .kpi-strip{grid-template-columns:repeat(2,1fr)}
+  .arch{flex-direction:column}
+  .arch-arrow{transform:rotate(90deg); align-self:center}
+}
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <div class="brand">
+    <div class="logo">EMS</div>
+    <div>
+      <h1>微电网能量管理系统 · EMS 仿真平台</h1>
+      <p>第三次大作业 ｜ 微电网能量管理技术：源—储—荷协调调度与运行优化</p>
+    </div>
+  </div>
+  <div class="who">
+    <div class="n">吴浩辉</div>
+    <div class="i">202410132011</div>
+  </div>
+  <div class="state-pill" id="statePill"><span class="dot"></span><span id="stateText">并网运行</span></div>
+</header>
+
+<main class="wrap">
+  <section class="kpi-strip">
+    <div class="kpi">
+      <span class="lab">累计运行成本</span>
+      <span class="val"><b id="kCost">0</b><i>¥</i></span>
+      <span class="sub">含购电、燃油与储能损耗</span>
+    </div>
+    <div class="kpi good">
+      <span class="lab">新能源消纳率</span>
+      <span class="val"><b id="kRenew">100.0</b><i>%</i></span>
+      <span class="sub">(发电量 − 弃电量) / 发电量</span>
+    </div>
+    <div class="kpi">
+      <span class="lab">供电自给率</span>
+      <span class="val"><b id="kSelf">0.0</b><i>%</i></span>
+      <span class="sub">本地电源 / 总负荷</span>
+    </div>
+    <div class="kpi">
+      <span class="lab">累计购电量</span>
+      <span class="val"><b id="kBuy">0</b><i>kWh</i></span>
+      <span class="sub" id="kSell">上网 0 kWh</span>
+    </div>
+    <div class="kpi">
+      <span class="lab">储能荷电状态</span>
+      <span class="val"><b id="kSoc">55</b><i>%</i></span>
+      <span class="sub" id="kSocSub">容量 240 kWh</span>
+    </div>
+    <div class="kpi">
+      <span class="lab">累计碳排放</span>
+      <span class="val"><b id="kCO2">0</b><i>kg</i></span>
+      <span class="sub">电网 0.581 · 柴油 0.85 kg/kWh</span>
+    </div>
+  </section>
+
+  <section class="card topo-card">
+    <div class="card-head">
+      <h2>微电网拓扑与实时功率流</h2>
+      <span class="hint" id="topoHint">在线数据 · 每分钟更新</span>
+    </div>
+    <svg viewBox="0 0 940 430" class="topo-svg" role="img" aria-label="微电网拓扑">
+      <path class="bus-line" d="M110,215 H830"/>
+      <text class="bus-label" x="470" y="242">交流母线 380 V / 50 Hz</text>
+
+      <path class="flow" id="f-pv" d="M145,112 V215"/>
+      <path class="flow" id="f-wind" d="M355,112 V215"/>
+      <path class="flow" id="f-grid" d="M780,112 V215"/>
+      <path class="flow" id="f-batt" d="M145,292 V215"/>
+      <path class="flow" id="f-diesel" d="M355,292 V215"/>
+      <path class="flow" id="f-load" d="M780,300 V215"/>
+
+      <g class="tnode source">
+        <rect x="70" y="46" width="150" height="66" rx="10"/>
+        <text class="t-title" x="145" y="72">光伏发电</text>
+        <text class="t-val" id="v-pv" x="145" y="95">0 kW</text>
+      </g>
+      <g class="tnode source">
+        <rect x="280" y="46" width="150" height="66" rx="10"/>
+        <text class="t-title" x="355" y="72">风力发电</text>
+        <text class="t-val" id="v-wind" x="355" y="95">0 kW</text>
+      </g>
+      <g class="tnode grid">
+        <rect x="700" y="46" width="160" height="66" rx="10"/>
+        <text class="t-title" x="780" y="72">大电网</text>
+        <text class="t-val" id="v-grid" x="780" y="95">交换 0 kW</text>
+      </g>
+      <g class="tnode batt">
+        <rect x="70" y="292" width="150" height="92" rx="10"/>
+        <text class="t-title" x="145" y="318">储能系统</text>
+        <text class="t-val" id="v-batt" x="145" y="341">待机</text>
+        <rect class="soc-bg" x="95" y="354" width="100" height="6" rx="3"/>
+        <rect class="soc-fill" id="socFill" x="95" y="354" width="55" height="6" rx="3"/>
+        <text class="t-sub" id="socText" x="145" y="374">SoC 55%</text>
+      </g>
+      <g class="tnode source">
+        <rect x="280" y="292" width="150" height="66" rx="10"/>
+        <text class="t-title" x="355" y="318">柴油发电机</text>
+        <text class="t-val" id="v-diesel" x="355" y="341">0 kW</text>
+      </g>
+      <g class="tnode load">
+        <rect x="700" y="300" width="160" height="70" rx="10"/>
+        <text class="t-title" x="780" y="327">负荷</text>
+        <text class="t-val" id="v-load" x="780" y="350">0 kW</text>
+      </g>
+    </svg>
+  </section>
+
+  <aside class="side">
+    <section class="card panel">
+      <div class="card-head"><h2>调度控制台</h2><span class="hint">参数修改后自动重算</span></div>
+      <div class="seg" id="segMode">
+        <button class="active" data-mode="grid">并网运行</button>
+        <button data-mode="island">孤岛运行</button>
+      </div>
+      <label class="field"><span>调度策略</span>
+        <select id="selStrategy">
+          <option value="eco">经济最优调度</option>
+          <option value="green">新能源优先消纳</option>
+        </select>
+      </label>
+      <div class="sliders">
+        <label class="slider">
+          <span class="sl-top"><span>储能容量</span><b id="vCap">240</b><i>kWh</i></span>
+          <input type="range" id="inCap" min="120" max="400" step="20" value="240">
+        </label>
+        <label class="slider">
+          <span class="sl-top"><span>初始荷电状态</span><b id="vSoc0">55</b><i>%</i></span>
+          <input type="range" id="inSoc" min="20" max="90" step="5" value="55">
+        </label>
+        <label class="slider">
+          <span class="sl-top"><span>光伏装机系数</span><b id="vPv">100</b><i>%</i></span>
+          <input type="range" id="inPv" min="50" max="150" step="10" value="100">
+        </label>
+      </div>
+      <div class="btn-row">
+        <button class="btn primary" id="btnPlay">暂停仿真</button>
+        <button class="btn" id="btnReset">重置</button>
+      </div>
+      <div class="speed-row">
+        <span>仿真速度</span>
+        <button data-speed="10">慢速</button>
+        <button data-speed="30" class="active">中速</button>
+        <button data-speed="60">快速</button>
+      </div>
+      <div class="progress"><div id="progFill"></div></div>
+      <div class="clock"><b id="simClock">00:00</b><span>仿真时间 / 24:00</span></div>
+      <p class="strategy-note" id="strategyNote">经济最优调度：峰时段由储能放电、谷时段充电，降低购电成本；新能源优先消纳：尽可能就地消纳风光发电，减少弃电。</p>
+    </section>
+
+    <section class="card log-card">
+      <div class="card-head"><h2>调度日志</h2><span class="hint">事件与告警</span></div>
+      <ul class="log-list" id="logList"></ul>
+    </section>
+  </aside>
+
+  <section class="card charts">
+    <div class="chart">
+      <div class="chart-head">
+        <h3>24 小时功率平衡</h3>
+        <span class="tag" id="stackTag">0 h 数据</span>
+      </div>
+      <div class="canvas-box"><canvas id="cvStack"></canvas></div>
+    </div>
+    <div class="chart">
+      <div class="chart-head"><h3>储能 SoC 与分时电价</h3><span class="tag" id="socTag">SoC 55%</span></div>
+      <div class="canvas-box"><canvas id="cvSoc"></canvas></div>
+    </div>
+    <div class="chart">
+      <div class="chart-head"><h3>累计运行成本</h3><span class="tag" id="costTag">¥0</span></div>
+      <div class="canvas-box"><canvas id="cvCost"></canvas></div>
+    </div>
+  </section>
+
+  <section class="bottom">
+    <section class="card arch-card">
+      <div class="card-head"><h2>能量管理系统架构</h2><span class="hint">预测 → 调度 → 控制</span></div>
+      <div class="arch">
+        <div class="arch-node">预测层
+          <small>负荷预测 · 光伏 / 风电功率预测 · 分时电价与气象信息</small>
+        </div>
+        <div class="arch-arrow">→</div>
+        <div class="arch-node">优化调度层
+          <small>运行成本最小 / 新能源消纳最大 · 储能充放电计划 · 机组启停</small>
+        </div>
+        <div class="arch-arrow">→</div>
+        <div class="arch-node">实时控制层
+          <small>下发功率指令 · 储能变流器与柴油机调节 · 并离网切换</small>
+        </div>
+      </div>
+      <p class="strategy-note" style="margin-top:12px">本平台按照“预测数据 → 逐分钟滚动调度 → 实时功率平衡”的闭环逻辑运行，可对比不同策略与储能配置下的经济性、消纳率与供电可靠性。</p>
+    </section>
+
+    <section class="card log-card">
+      <div class="card-head"><h2>当日运行摘要</h2><span class="hint">实时统计</span></div>
+      <ul class="log-list" id="summaryList" style="max-height:none">
+        <li>新能源发电量 <span style="margin-left:auto;color:#dff3ff" id="sRenew">0 kWh</span></li>
+        <li>负荷用电量 <span style="margin-left:auto;color:#dff3ff" id="sLoad">0 kWh</span></li>
+        <li>弃风弃光电量 <span style="margin-left:auto;color:#ffd98a" id="sCurt">0 kWh</span></li>
+        <li>柴油发电量 <span style="margin-left:auto;color:#ffd98a" id="sDiesel">0 kWh</span></li>
+        <li>缺供电量 <span style="margin-left:auto;color:#ffc9d2" id="sUnmet">0 kWh</span></li>
+      </ul>
+    </section>
+  </section>
+</main>
+
+<footer>
+  <div class="sig">微电网能量管理系统仿真平台 ｜ 课程大作业（第三次） ｜ <b>吴浩辉 · 202410132011</b></div>
+  <div>纯前端实现 · 无需联网即可运行 · 数据为教学演示模型</div>
+</footer>
+
+<script>
+(function(){
+'use strict';
+var $=function(s){return document.querySelector(s);};
+var $$=function(s){return Array.prototype.slice.call(document.querySelectorAll(s));};
+var clamp=function(v,a,b){return Math.min(b,Math.max(a,v));};
+
+var GRID_MAX=140, EXPORT_MAX=90, DIESEL_MAX=60;
+
+/* ================= 配置与仿真状态 ================= */
+var cfg={strategy:'eco', gridOn:true, cap:240, soc0:0.55, pvScale:1, pMax:55, socMin:0.15, socMax:0.96};
+var sim={
+  t:0, idx:0, running:true, speed:30, soc:0.55,
+  rows:[], cost:0, lastPrice:0, log:[], flags:{},
+  totals:{load:0,renew:0,curt:0,buy:0,sell:0,dieselE:0,battDis:0,co2:0,unmet:0}
+};
+var P=null;
+
+/* ================= 预测数据 ================= */
+function makeProfiles(){
+  var N=1440, pv=[],wind=[],load=[],price=[];
+  for(var i=0;i<N;i++){
+    var h=i/60;
+    var s=Math.sin(Math.PI*clamp((h-6)/12,0,1));
+    var cloud=0.86+0.10*Math.sin(h*1.9+0.7)+0.04*Math.sin(h*6.1);
+    pv.push(Math.max(0, s*s*125*cloud));
+    var w=52+22*Math.sin((h-3)/24*2*Math.PI)+9*Math.sin(h*2.3+1.1)+4*Math.sin(h*5.7);
+    wind.push(clamp(w,6,110));
+    var base=62+30*Math.exp(-Math.pow((h-9.5)/1.9,2))+48*Math.exp(-Math.pow((h-19.5)/2.3,2))+6*Math.sin(h*1.4+0.4);
+    load.push(clamp(base,45,160));
+    var pr=0.38;
+    if((h>=10&&h<12)||(h>=17&&h<21)) pr=1.26;
+    else if((h>=8&&h<10)||(h>=12&&h<17)||(h>=21&&h<23)) pr=0.82;
+    price.push(pr);
+  }
+  return {pv:pv,wind:wind,load:load,price:price};
+}
+
+/* ================= 单分钟调度 ================= */
+function runMinute(i){
+  var pv=P.pv[i]*cfg.pvScale, wind=P.wind[i], load=P.load[i], price=P.price[i];
+  var batt=0, diesel=0, grid=0, curt=0, unmet=0;
+  var soc=sim.soc;
+  var maxCh=Math.min(cfg.pMax, Math.max(0,(cfg.socMax-soc))*cfg.cap*60);
+  var maxDis=Math.min(cfg.pMax, Math.max(0,(soc-cfg.socMin))*cfg.cap*60);
+  var net=load-pv-wind;
+  var ch, rem;
+
+  if(!cfg.gridOn){
+    if(net>0){
+      batt=Math.min(maxDis, net);
+      rem=net-batt;
+      diesel=Math.min(DIESEL_MAX, rem);
+      unmet=Math.max(0, rem-diesel);
+    }else{
+      ch=Math.min(maxCh, -net);
+      batt=-ch;
+      curt=-net-ch;
+    }
+  }else if(cfg.strategy==='green'){
+    if(net>0){
+      batt=Math.min(maxDis, net);
+      grid=net-batt;
+      if(grid>GRID_MAX){ diesel=Math.min(DIESEL_MAX, grid-GRID_MAX); grid-=diesel; }
+    }else{
+      ch=Math.min(maxCh, -net);
+      batt=-ch;
+      grid=net+ch;
+      if(grid<-EXPORT_MAX){ curt=-(grid+EXPORT_MAX); grid=-EXPORT_MAX; }
+    }
+  }else{
+    if(price<=0.5){
+      ch=Math.min(maxCh, 30);
+      batt=-ch;
+      grid=net+ch;
+      if(grid<-EXPORT_MAX){ curt=-(grid+EXPORT_MAX); grid=-EXPORT_MAX; }
+      if(grid>GRID_MAX){ diesel=Math.min(DIESEL_MAX, grid-GRID_MAX); grid-=diesel; }
+    }else if(price>=1.0){
+      batt=Math.min(maxDis, Math.max(0,net));
+      grid=net-batt;
+      if(grid>GRID_MAX){ diesel=Math.min(DIESEL_MAX, grid-GRID_MAX); grid-=diesel; }
+    }else{
+      grid=net;
+      if(net<0){
+        ch=Math.min(maxCh, -net);
+        batt=-ch;
+        grid=net+ch;
+      }
+      if(grid>GRID_MAX){ diesel=Math.min(DIESEL_MAX, grid-GRID_MAX); grid-=diesel; }
+      if(grid<-EXPORT_MAX){ curt=-(grid+EXPORT_MAX); grid=-EXPORT_MAX; }
+    }
+  }
+
+  if(batt>0) soc-=batt/60/(cfg.cap*0.95);
+  else soc+=(-batt)/60*0.95/cfg.cap;
+  sim.soc=clamp(soc,0.05,0.98);
+
+  var gridCost = grid>=0 ? grid/60*price : grid/60*price*0.35;
+  var fuel = diesel/60*2.35;
+  var deg = Math.abs(batt)/60*0.12;
+  sim.cost += gridCost+fuel+deg;
+
+  var T=sim.totals;
+  T.load+=load/60; T.renew+=(pv+wind)/60; T.curt+=curt/60;
+  T.buy+=Math.max(0,grid)/60; T.sell+=Math.max(0,-grid)/60;
+  T.dieselE+=diesel/60; T.battDis+=Math.max(0,batt)/60;
+  T.co2+=(Math.max(0,grid)*0.581+diesel*0.85)/60;
+  T.unmet+=unmet/60;
+
+  sim.rows.push({i:i,pv:pv,wind:wind,load:load,batt:batt,diesel:diesel,grid:grid,curt:curt,price:price,soc:sim.soc,cost:sim.cost});
+
+  // 事件记录
+  if(i>0 && Math.abs(price-sim.lastPrice)>1e-6){
+    sim.lastPrice=price;
+    var seg = price>=1.0?'峰段':(price>=0.6?'平段':'谷段');
+    log(fmtClock(i)+'  电价进入'+seg+'，¥'+price.toFixed(2)+'/kWh','');
+  }
+  if(i===0){ sim.lastPrice=price; }
+  if(sim.soc>0.95 && !sim.flags.full){ sim.flags.full=true; log(fmtClock(i)+'  储能接近满充，限制充电功率','ok'); }
+  if(sim.soc<0.9) sim.flags.full=false;
+  if(sim.soc<0.18 && !sim.flags.low){ sim.flags.low=true; log(fmtClock(i)+'  储能 SoC 低于 18%，进入保护区间','warn'); }
+  if(sim.soc>0.25) sim.flags.low=false;
+  if(curt>3 && !sim.flags.curt){ sim.flags.curt=true; log(fmtClock(i)+'  出现弃风弃光，弃电功率约 '+curt.toFixed(0)+' kW','warn'); }
+  if(curt<0.5) sim.flags.curt=false;
+  if(unmet>1 && !sim.flags.unmet){ sim.flags.unmet=true; log(fmtClock(i)+'  供电不足，切除负荷约 '+unmet.toFixed(0)+' kW','bad'); }
+  if(unmet<0.2) sim.flags.unmet=false;
+}
+
+/* ================= 工具 ================= */
+function fmtClock(min){
+  min=Math.floor(min);
+  var h=Math.floor(min/60), m=min%60;
+  return (h<10?'0':'')+h+':'+(m<10?'0':'')+m;
+}
+function log(text,tone){
+  sim.log.unshift({t:text,tone:tone||''});
+  if(sim.log.length>28) sim.log.pop();
+  renderLog();
+}
+function renderLog(){
+  var el=$('#logList');
+  if(!sim.log.length){ el.innerHTML='<li class="empty">暂无日志</li>'; return; }
+  el.innerHTML=sim.log.map(function(e){
+    return '<li class="'+e.tone+'">'+e.text+'</li>';
+  }).join('');
+}
+function hexA(hex,a){
+  var r=parseInt(hex.slice(1,3),16), g=parseInt(hex.slice(3,5),16), b=parseInt(hex.slice(5,7),16);
+  return 'rgba('+r+','+g+','+b+','+a+')';
+}
+function fit(cv){
+  var dpr=window.devicePixelRatio||1;
+  var w=Math.max(20,cv.clientWidth), h=Math.max(20,cv.clientHeight);
+  if(cv.width!==Math.floor(w*dpr)||cv.height!==Math.floor(h*dpr)){
+    cv.width=Math.floor(w*dpr); cv.height=Math.floor(h*dpr);
+  }
+  var ctx=cv.getContext('2d');
+  ctx.setTransform(dpr,0,0,dpr,0,0);
+  ctx.clearRect(0,0,w,h);
+  return {ctx:ctx,w:w,h:h};
+}
+function gridBg(ctx,w,h,pad,rows,cols){
+  ctx.strokeStyle='rgba(110,140,190,.09)'; ctx.lineWidth=1;
+  var i,y,x;
+  for(i=0;i<=rows;i++){
+    y=pad.t+(h-pad.t-pad.b)*i/rows;
+    ctx.beginPath(); ctx.moveTo(pad.l,y); ctx.lineTo(w-pad.r,y); ctx.stroke();
+  }
+  for(i=0;i<=cols;i++){
+    x=pad.l+(w-pad.l-pad.r)*i/cols;
+    ctx.beginPath(); ctx.moveTo(x,pad.t); ctx.lineTo(x,h-pad.b); ctx.stroke();
+  }
+}
+
+/* ================= 图表 ================= */
+function drawStack(){
+  var g=fit($('#cvStack')), ctx=g.ctx, w=g.w, h=g.h;
+  var pad={l:42,r:12,t:26,b:22};
+  var N=1440, idx=sim.idx;
+  var ymax=160;
+  for(var i=0;i<idx;i+=3){
+    var rr=sim.rows[i];
+    ymax=Math.max(ymax, rr.pv+rr.wind, rr.load);
+  }
+  ymax=Math.ceil(ymax*1.15/20)*20;
+  var X=function(m){return pad.l+(m/N)*(w-pad.l-pad.r);};
+  var Y=function(v){return pad.t+(ymax-v)/ymax*(h-pad.t-pad.b);};
+  gridBg(ctx,w,h,pad,4,6);
+
+  var layers=[
+    {k:'pv',c:'#fbbf24'},
+    {k:'wind',c:'#38bdf8'},
+    {k:'batt',c:'#4ade80'},
+    {k:'diesel',c:'#fb923c'},
+    {k:'grid',c:'#818cf8'}
+  ];
+
+  if(idx>1){
+    var prev=new Float32Array(idx);
+    layers.forEach(function(L){
+      var top=new Float32Array(idx);
+      for(var j=0;j<idx;j++){
+        var r=sim.rows[j];
+        var v;
+        if(L.k==='batt') v=Math.max(0,r.batt);
+        else if(L.k==='grid') v=Math.max(0,r.grid);
+        else v=r[L.k];
+        top[j]=prev[j]+v;
+      }
+      ctx.beginPath();
+      for(var j2=0;j2<idx;j2+=2){
+        var x=X(j2), y=Y(top[j2]);
+        if(j2===0) ctx.moveTo(x,y); else ctx.lineTo(x,y);
+      }
+      for(var j3=idx-1;j3>=0;j3-=2){
+        ctx.lineTo(X(j3),Y(prev[j3]));
+      }
+      ctx.closePath();
+      ctx.fillStyle=hexA(L.c,0.19);
+      ctx.fill();
+
+      ctx.beginPath();
+      for(var j4=0;j4<idx;j4+=2){
+        var x4=X(j4), y4=Y(top[j4]);
+        if(j4===0) ctx.moveTo(x4,y4); else ctx.lineTo(x4,y4);
+      }
+      ctx.strokeStyle=hexA(L.c,0.85); ctx.lineWidth=1.3; ctx.stroke();
+      prev=top;
+    });
+
+    // 负荷曲线
+    ctx.beginPath();
+    for(var j5=0;j5<idx;j5+=2){
+      var x5=X(j5), y5=Y(sim.rows[j5].load);
+      if(j5===0) ctx.moveTo(x5,y5); else ctx.lineTo(x5,y5);
+    }
+    ctx.strokeStyle='rgba(226,240,255,.75)'; ctx.lineWidth=1.6; ctx.setLineDash([4,4]); ctx.stroke(); ctx.setLineDash([]);
+  }
+
+  // 现在时刻
+  if(idx>0){
+    var xn=X(Math.min(idx,1439));
+    ctx.strokeStyle='rgba(45,212,191,.45)'; ctx.lineWidth=1; ctx.setLineDash([3,4]);
+    ctx.beginPath(); ctx.moveTo(xn,pad.t); ctx.lineTo(xn,h-pad.b); ctx.stroke(); ctx.setLineDash([]);
+  }
+
+  // 坐标
+  ctx.font='10px "Segoe UI","Microsoft YaHei",sans-serif';
+  ctx.fillStyle='#5f7391'; ctx.textAlign='right'; ctx.textBaseline='middle';
+  for(var t=0;t<=4;t++){
+    var v=ymax*t/4;
+    ctx.fillText(v.toFixed(0),pad.l-6,Y(v));
+  }
+  ctx.textAlign='center'; ctx.textBaseline='top';
+  for(var hh=0;hh<=24;hh+=6){
+    ctx.fillText(hh+'h',X(hh*60),h-pad.b+5);
+  }
+
+  // 图例
+  var items=[['光伏','#fbbf24'],['风电','#38bdf8'],['储能放电','#4ade80'],['柴油','#fb923c'],['购电','#818cf8'],['负荷','rgba(226,240,255,.75)']];
+  ctx.textAlign='left'; ctx.textBaseline='middle';
+  var lx=pad.l+2, ly=12;
+  items.forEach(function(it){
+    ctx.fillStyle=it[1]; ctx.fillRect(lx,ly-3,8,3);
+    ctx.fillStyle='#8ea3c0'; ctx.fillText(it[0],lx+11,ly);
+    lx+=ctx.measureText(it[0]).width+24;
+  });
+}
+
+function drawSoc(){
+  var g=fit($('#cvSoc')), ctx=g.ctx, w=g.w, h=g.h;
+  var pad={l:36,r:36,t:24,b:22};
+  var N=1440, idx=sim.idx;
+  var X=function(m){return pad.l+(m/N)*(w-pad.l-pad.r);};
+  var Y=function(v){return pad.t+(100-v)/100*(h-pad.t-pad.b);};
+  var Yp=function(v){return pad.t+(1.4-v)/1.4*(h-pad.t-pad.b);};
+  gridBg(ctx,w,h,pad,4,6);
+
+  if(idx>1){
+    // 电价阶梯
+    ctx.beginPath();
+    for(var i=0;i<idx;i++){
+      var x1=X(i), x2=X(i+1), y=Yp(sim.rows[i].price);
+      if(i===0) ctx.moveTo(x1,y); else ctx.lineTo(x1,y);
+      ctx.lineTo(x2,y);
+    }
+    ctx.strokeStyle='rgba(167,139,250,.5)'; ctx.lineWidth=1.2; ctx.setLineDash([3,3]); ctx.stroke(); ctx.setLineDash([]);
+
+    // SoC 面积
+    var grad=ctx.createLinearGradient(0,pad.t,0,h-pad.b);
+    grad.addColorStop(0,'rgba(74,222,128,.30)');
+    grad.addColorStop(1,'rgba(74,222,128,0)');
+    ctx.beginPath();
+    ctx.moveTo(X(0),Y(100));
+    for(var j=0;j<idx;j+=2){ ctx.lineTo(X(j),Y(sim.rows[j].soc*100)); }
+    ctx.lineTo(X(idx-1),Y(100));
+    ctx.closePath(); ctx.fillStyle=grad; ctx.fill();
+
+    ctx.beginPath();
+    for(var k=0;k<idx;k+=2){
+      var xk=X(k), yk=Y(sim.rows[k].soc*100);
+      if(k===0) ctx.moveTo(xk,yk); else ctx.lineTo(xk,yk);
+    }
+    ctx.strokeStyle='#4ade80'; ctx.lineWidth=2; ctx.stroke();
+
+    var xn=X(Math.min(idx,1439));
+    ctx.strokeStyle='rgba(45,212,191,.4)'; ctx.lineWidth=1; ctx.setLineDash([3,4]);
+    ctx.beginPath(); ctx.moveTo(xn,pad.t); ctx.lineTo(xn,h-pad.b); ctx.stroke(); ctx.setLineDash([]);
+  }
+
+  ctx.font='10px "Segoe UI","Microsoft YaHei",sans-serif';
+  ctx.fillStyle='#5f7391'; ctx.textAlign='right'; ctx.textBaseline='middle';
+  [0,25,50,75,100].forEach(function(v){ ctx.fillText(v+'%',pad.l-6,Y(v)); });
+  ctx.textAlign='left'; ctx.fillStyle='rgba(167,139,250,.8)';
+  ctx.fillText('¥1.26',w-pad.r+4,Yp(1.26));
+  ctx.fillText('¥0.38',w-pad.r+4,Yp(0.38));
+  ctx.textAlign='center'; ctx.textBaseline='top'; ctx.fillStyle='#5f7391';
+  for(var hh=0;hh<=24;hh+=6){ ctx.fillText(hh+'h',X(hh*60),h-pad.b+5); }
+
+  ctx.textAlign='left'; ctx.textBaseline='middle';
+  ctx.fillStyle='#4ade80'; ctx.fillRect(pad.l+2,9,8,3);
+  ctx.fillStyle='#8ea3c0'; ctx.fillText('SoC',pad.l+13,12);
+  ctx.fillStyle='rgba(167,139,250,.7)'; ctx.fillRect(pad.l+48,9,8,3);
+  ctx.fillStyle='#8ea3c0'; ctx.fillText('电价',pad.l+59,12);
+}
+
+function drawCost(){
+  var g=fit($('#cvCost')), ctx=g.ctx, w=g.w, h=g.h;
+  var pad={l:44,r:12,t:24,b:22};
+  var N=1440, idx=sim.idx;
+  var ymax=Math.max(20,sim.cost*1.12);
+  var X=function(m){return pad.l+(m/N)*(w-pad.l-pad.r);};
+  var Y=function(v){return pad.t+(ymax-v)/ymax*(h-pad.t-pad.b);};
+  gridBg(ctx,w,h,pad,4,6);
+
+  if(idx>1){
+    var grad=ctx.createLinearGradient(0,pad.t,0,h-pad.b);
+    grad.addColorStop(0,'rgba(56,189,248,.32)');
+    grad.addColorStop(1,'rgba(56,189,248,0)');
+    ctx.beginPath();
+    ctx.moveTo(X(0),Y(0));
+    for(var i=0;i<idx;i+=2){ ctx.lineTo(X(i),Y(sim.rows[i].cost)); }
+    ctx.lineTo(X(idx-1),Y(0));
+    ctx.closePath(); ctx.fillStyle=grad; ctx.fill();
+
+    ctx.beginPath();
+    for(var j=0;j<idx;j+=2){
+      var xj=X(j), yj=Y(sim.rows[j].cost);
+      if(j===0) ctx.moveTo(xj,yj); else ctx.lineTo(xj,yj);
+    }
+    ctx.strokeStyle='#38bdf8'; ctx.lineWidth=2; ctx.stroke();
+  }
+
+  ctx.font='10px "Segoe UI","Microsoft YaHei",sans-serif';
+  ctx.fillStyle='#5f7391'; ctx.textAlign='right'; ctx.textBaseline='middle';
+  for(var t=0;t<=4;t++){ ctx.fillText('¥'+(ymax*t/4).toFixed(0),pad.l-6,Y(ymax*t/4)); }
+  ctx.textAlign='center'; ctx.textBaseline='top';
+  for(var hh=0;hh<=24;hh+=6){ ctx.fillText(hh+'h',X(hh*60),h-pad.b+5); }
+}
+
+/* ================= 渲染 ================= */
+var lastChartDraw=0;
+function renderTopo(){
+  var r=sim.rows.length?sim.rows[sim.rows.length-1]:null;
+  var pv=r?r.pv:0, wind=r?r.wind:0, load=r?r.load:0;
+  var batt=r?r.batt:0, diesel=r?r.diesel:0, grid=r?r.grid:0;
+  $('#v-pv').textContent=pv.toFixed(0)+' kW';
+  $('#v-wind').textContent=wind.toFixed(0)+' kW';
+  $('#v-diesel').textContent=diesel.toFixed(0)+' kW';
+  $('#v-load').textContent=load.toFixed(0)+' kW';
+  $('#v-batt').textContent = batt>0.5?'放电 '+batt.toFixed(0)+' kW' : (batt<-0.5?'充电 '+(-batt).toFixed(0)+' kW':'待机');
+  $('#v-grid').textContent = !cfg.gridOn ? '离网独立' : (grid>0.5?'购电 '+grid.toFixed(0)+' kW' : (grid<-0.5?'上网 '+(-grid).toFixed(0)+' kW':'交换 0 kW'));
+  $('#socText').textContent='SoC '+(sim.soc*100).toFixed(0)+'%';
+  $('#socFill').setAttribute('width',(100*sim.soc).toFixed(1));
+
+  flow('f-pv',pv,'#fbbf24');
+  flow('f-wind',wind,'#38bdf8');
+  flow('f-load',load,'#a78bfa');
+  flow('f-diesel',diesel,'#fb923c');
+  flow('f-batt',Math.abs(batt),batt>=0?'#4ade80':'#fbbf24');
+  flow('f-grid',cfg.gridOn?Math.abs(grid):0,grid>=0?'#818cf8':'#4ade80');
+  $('#f-grid').style.opacity = cfg.gridOn ? $('#f-grid').style.opacity : 0.06;
+}
+function flow(id,p,color){
+  var el=document.getElementById(id);
+  el.style.opacity = p>0.5 ? Math.min(0.95,0.22+p/100*0.75) : 0.1;
+  el.style.strokeWidth = (1.3+Math.min(2.6,p/45))+'px';
+  if(color) el.style.stroke=color;
+}
+
+function renderKPI(){
+  var T=sim.totals;
+  var rate=T.renew>0 ? (T.renew-T.curt)/T.renew*100 : 100;
+  var self=T.load>0 ? clamp((T.renew-T.curt+T.dieselE+T.battDis)/T.load*100,0,100) : 0;
+  $('#kCost').textContent=sim.cost.toFixed(0);
+  $('#kRenew').textContent=rate.toFixed(1);
+  $('#kSelf').textContent=self.toFixed(1);
+  $('#kBuy').textContent=T.buy.toFixed(0);
+  $('#kSell').textContent='上网 '+T.sell.toFixed(0)+' kWh';
+  $('#kSoc').textContent=(sim.soc*100).toFixed(0);
+  $('#kSocSub').textContent='容量 '+cfg.cap+' kWh';
+  $('#kCO2').textContent=T.co2.toFixed(0);
+
+  $('#sRenew').textContent=T.renew.toFixed(0)+' kWh';
+  $('#sLoad').textContent=T.load.toFixed(0)+' kWh';
+  $('#sCurt').textContent=T.curt.toFixed(1)+' kWh';
+  $('#sDiesel').textContent=T.dieselE.toFixed(1)+' kWh';
+  $('#sUnmet').textContent=T.unmet.toFixed(1)+' kWh';
+
+  $('#simClock').textContent=fmtClock(Math.min(sim.idx,1440));
+  $('#progFill').style.width=(Math.min(sim.idx,1440)/1440*100)+'%';
+  $('#socTag').textContent='SoC '+(sim.soc*100).toFixed(0)+'%';
+  $('#costTag').textContent='¥'+sim.cost.toFixed(0);
+  $('#stackTag').textContent=Math.floor(sim.idx/60)+' h 数据';
+  $('#stateText').textContent=cfg.gridOn?'并网运行':'孤岛运行';
+}
+
+function renderCharts(force){
+  var now=performance.now();
+  if(!force && now-lastChartDraw<110) return;
+  lastChartDraw=now;
+  drawStack(); drawSoc(); drawCost();
+}
+
+/* ================= 主循环 ================= */
+var last=performance.now();
+function frame(now){
+  var dt=Math.min(0.12,(now-last)/1000);
+  last=now;
+  if(sim.running){
+    sim.t+=dt*sim.speed;
+    var target=Math.min(1440,Math.floor(sim.t));
+    while(sim.idx<target){ runMinute(sim.idx); sim.idx++; }
+    if(sim.idx>=1440){
+      sim.running=false; sim.t=1440;
+      log('24:00  仿真完成：累计运行成本 ¥'+sim.cost.toFixed(0)+'，新能源消纳率 '+
+        ((sim.totals.renew-sim.totals.curt)/Math.max(1,sim.totals.renew)*100).toFixed(1)+'%','ok');
+      updatePlayBtn();
+    }
+  }
+  renderTopo();
+  renderKPI();
+  renderCharts(false);
+  requestAnimationFrame(frame);
+}
+
+/* ================= 控制 ================= */
+function updatePlayBtn(){
+  var b=$('#btnPlay');
+  if(sim.running && sim.idx<1440) b.textContent='暂停仿真';
+  else if(sim.idx>=1440) b.textContent='重新仿真';
+  else b.textContent = sim.idx>0?'继续仿真':'开始仿真';
+}
+function resetSim(keepLog){
+  P=makeProfiles();
+  sim.t=0; sim.idx=0; sim.soc=cfg.soc0; sim.cost=0;
+  sim.rows=[]; sim.flags={}; sim.lastPrice=P.price[0];
+  sim.totals={load:0,renew:0,curt:0,buy:0,sell:0,dieselE:0,battDis:0,co2:0,unmet:0};
+  if(!keepLog) sim.log=[];
+  updatePlayBtn();
+  renderKPI();
+  renderTopo();
+  renderCharts(true);
+  renderLog();
+}
+function setMode(isGrid){
+  cfg.gridOn=isGrid;
+  $$('#segMode button').forEach(function(b){ b.classList.toggle('active',(b.getAttribute('data-mode')==='grid')===isGrid); });
+  $('#selStrategy').disabled=!isGrid;
+  resetSim(true);
+  log(isGrid?'切换为并网运行模式，重新开始调度':'切换为孤岛运行模式：储能优先，柴油备用','ok');
+}
+function applyParamChange(){
+  cfg.cap=parseInt($('#inCap').value,10);
+  cfg.soc0=parseInt($('#inSoc').value,10)/100;
+  cfg.pvScale=parseInt($('#inPv').value,10)/100;
+  $('#vCap').textContent=cfg.cap;
+  $('#vSoc0').textContent=Math.round(cfg.soc0*100);
+  $('#vPv').textContent=Math.round(cfg.pvScale*100);
+  resetSim(true);
+  log('参数已更新：储能 '+cfg.cap+' kWh，初始 SoC '+Math.round(cfg.soc0*100)+'%，光伏系数 '+Math.round(cfg.pvScale*100)+'%','ok');
+}
+
+$('#segMode').addEventListener('click',function(e){
+  var b=e.target.closest('button');
+  if(b) setMode(b.getAttribute('data-mode')==='grid');
+});
+$('#selStrategy').addEventListener('change',function(){
+  cfg.strategy=this.value;
+  $('#strategyNote').textContent = cfg.strategy==='eco'
+    ? '经济最优调度：峰时段由储能放电、谷时段充电，降低购电成本；新能源优先消纳：尽可能就地消纳风光发电，减少弃电。'
+    : '新能源优先消纳：优先使用光伏与风电满足负荷，富余电量给储能充电，不足部分从电网购电；弃电量为零作为首要目标。';
+  resetSim(true);
+  log('调度策略切换为「'+(cfg.strategy==='eco'?'经济最优':'新能源优先')+'」','ok');
+});
+$('#inCap').addEventListener('input',function(){ $('#vCap').textContent=this.value; });
+$('#inSoc').addEventListener('input',function(){ $('#vSoc0').textContent=this.value; });
+$('#inPv').addEventListener('input',function(){ $('#vPv').textContent=this.value; });
+['inCap','inSoc','inPv'].forEach(function(id){
+  document.getElementById(id).addEventListener('change',applyParamChange);
+});
+$('#btnPlay').addEventListener('click',function(){
+  if(sim.idx>=1440){ resetSim(true); }
+  sim.running=!sim.running;
+  if(sim.t>1440) sim.t=1440;
+  updatePlayBtn();
+  log(sim.running?'仿真继续运行':'仿真已暂停','');
+});
+$('#btnReset').addEventListener('click',function(){
+  resetSim(false);
+  sim.running=false;
+  updatePlayBtn();
+  log('仿真已重置，等待开始','ok');
+});
+$$('.speed-row button').forEach(function(b){
+  b.addEventListener('click',function(){
+    sim.speed=parseInt(b.getAttribute('data-speed'),10);
+    $$('.speed-row button').forEach(function(x){ x.classList.toggle('active',x===b); });
+  });
+});
+
+/* ================= 启动 ================= */
+P=makeProfiles();
+sim.soc=cfg.soc0;
+sim.lastPrice=P.price[0];
+$('#strategyNote').textContent='经济最优调度：峰时段由储能放电、谷时段充电，降低购电成本；新能源优先消纳：尽可能就地消纳风光发电，减少弃电。';
+renderLog();
+log('00:00  仿真开始：并网运行，经济最优调度策略','ok');
+resetSim(true);
+sim.running=true;
+updatePlayBtn();
+renderKPI();
+renderTopo();
+renderCharts(true);
+requestAnimationFrame(frame);
+
+})();
+</script>
+</body>
+</html>

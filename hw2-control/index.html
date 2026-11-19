@@ -1,0 +1,1054 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="author" content="吴浩辉 202410132011">
+<meta name="description" content="微电网控制技术框图交互仿真平台 — 吴浩辉 202410132011">
+<title>微电网控制技术虚拟仿真 · 吴浩辉 202410132011</title>
+<style>
+:root{
+  --bg:#070d18; --bg2:#0a1222; --card:#0e1829; --card2:#122038; --card3:#16263f;
+  --line:#1f2f49; --line2:#2a3d5c;
+  --text:#e8eef9; --muted:#93a5c0; --dim:#5f7391;
+  --cyan:#2dd4bf; --blue:#60a5fa; --amber:#fbbf24; --red:#fb7185;
+  --green:#4ade80; --violet:#a78bfa; --sky:#38bdf8;
+  --radius:14px;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{
+  background:
+    radial-gradient(1100px 520px at 12% -8%, rgba(45,212,191,.10), transparent 60%),
+    radial-gradient(900px 500px at 92% 0%, rgba(96,165,250,.10), transparent 55%),
+    var(--bg);
+  color:var(--text);
+  font-family:"Segoe UI","Microsoft YaHei","PingFang SC",system-ui,-apple-system,sans-serif;
+  min-height:100vh; -webkit-font-smoothing:antialiased;
+  font-size:14px; line-height:1.5;
+}
+a{color:var(--cyan)}
+/* ---------- header ---------- */
+.topbar{
+  display:flex; align-items:center; gap:18px; flex-wrap:wrap;
+  padding:14px 26px;
+  border-bottom:1px solid var(--line);
+  background:linear-gradient(180deg, rgba(16,27,46,.92), rgba(8,14,26,.8));
+  backdrop-filter:blur(10px);
+  position:sticky; top:0; z-index:30;
+}
+.brand{display:flex; align-items:center; gap:13px; min-width:0; flex:1}
+.logo{
+  width:42px; height:42px; border-radius:11px; flex:none;
+  display:grid; place-items:center; font-weight:800; letter-spacing:.5px;
+  color:#05141a; font-size:15px;
+  background:linear-gradient(140deg,#5eead4,#38bdf8 60%,#818cf8);
+  box-shadow:0 6px 18px rgba(45,212,191,.25);
+}
+.brand h1{font-size:17px; margin:0; font-weight:650; letter-spacing:.2px}
+.brand p{margin:2px 0 0; font-size:12px; color:var(--muted); letter-spacing:.2px}
+.who{
+  text-align:right; padding:5px 14px; border-left:1px solid var(--line2);
+  line-height:1.25;
+}
+.who .n{font-size:14px; font-weight:650; letter-spacing:1px; color:#dce9ff}
+.who .i{font-size:12px; color:var(--cyan); font-variant-numeric:tabular-nums; letter-spacing:.6px}
+.run-pill{
+  display:flex; align-items:center; gap:7px; cursor:pointer; user-select:none;
+  font-size:12px; color:#b9f6e9; padding:7px 13px; border-radius:999px;
+  border:1px solid rgba(45,212,191,.35); background:rgba(45,212,191,.08);
+  transition:.2s;
+}
+.run-pill:hover{background:rgba(45,212,191,.15)}
+.run-pill .dot{width:7px; height:7px; border-radius:50%; background:var(--cyan); box-shadow:0 0 0 0 rgba(45,212,191,.6); animation:pulse 1.8s infinite}
+.run-pill.off{color:#ffd7dd; border-color:rgba(251,113,133,.4); background:rgba(251,113,133,.08)}
+.run-pill.off .dot{background:var(--red); animation:none}
+@keyframes pulse{70%{box-shadow:0 0 0 7px rgba(45,212,191,0)}100%{box-shadow:0 0 0 0 rgba(45,212,191,0)}}
+/* ---------- tabs ---------- */
+.tabsbar{max-width:1580px; margin:0 auto; padding:16px 20px 0}
+.tabs{display:flex; gap:8px; flex-wrap:wrap}
+.tab{
+  display:flex; align-items:center; gap:9px;
+  padding:10px 16px; border-radius:11px; cursor:pointer;
+  border:1px solid var(--line); background:rgba(16,27,46,.55);
+  color:var(--muted); font-size:13px; font-family:inherit;
+  transition:.18s;
+}
+.tab:hover{border-color:var(--line2); color:var(--text); background:rgba(22,38,63,.7)}
+.tab .idx{font-size:10.5px; font-weight:700; color:var(--dim); letter-spacing:.5px}
+.tab.active{
+  color:#d9fbf5; border-color:rgba(45,212,191,.5);
+  background:linear-gradient(180deg, rgba(45,212,191,.16), rgba(45,212,191,.05));
+  box-shadow:inset 0 0 0 1px rgba(45,212,191,.08);
+}
+.tab.active .idx{color:var(--cyan)}
+.subbar{
+  display:flex; align-items:center; gap:8px; flex-wrap:wrap;
+  margin-top:12px; padding:9px 12px; border-radius:11px;
+  background:rgba(14,24,41,.6); border:1px solid var(--line);
+}
+.subbar.hidden{display:none}
+.subbar-label{font-size:12px; color:var(--dim); margin-right:3px}
+.chip{
+  font-family:inherit; font-size:12.5px; cursor:pointer;
+  padding:6px 13px; border-radius:8px; color:var(--muted);
+  border:1px solid var(--line); background:transparent; transition:.16s;
+}
+.chip:hover{color:var(--text); border-color:var(--line2)}
+.chip.active{color:#0b1a1f; background:linear-gradient(180deg,#5eead4,#2dd4bf); border-color:transparent; font-weight:600}
+.subbar-note{margin-left:auto; font-size:12px; color:var(--dim)}
+/* ---------- layout ---------- */
+.wrap{
+  max-width:1580px; margin:0 auto; padding:16px 20px 30px;
+  display:grid; grid-template-columns:minmax(0,1.62fr) minmax(330px,.88fr);
+  gap:16px; align-items:start;
+}
+.card{
+  background:linear-gradient(180deg, rgba(16,28,47,.85), rgba(11,19,33,.9));
+  border:1px solid var(--line); border-radius:var(--radius);
+  box-shadow:0 12px 32px rgba(0,0,0,.25);
+}
+.card-head{
+  display:flex; align-items:center; justify-content:space-between; gap:12px;
+  padding:14px 18px 0;
+}
+.card-head h2{font-size:14.5px; margin:0; font-weight:650; letter-spacing:.3px}
+.card-head .hint{font-size:11.5px; color:var(--dim)}
+.diagram-card{padding-bottom:8px; overflow:hidden}
+.diagram-wrap{padding:10px 10px 0; transition:.3s}
+.diagram-wrap.paused .edge{animation-play-state:paused}
+.diagram-svg{width:100%; height:auto; display:block}
+.caption{margin:6px 18px 12px; font-size:12px; color:var(--muted); line-height:1.6}
+.caption b{color:#c9e3ff; font-weight:600}
+/* svg */
+.edge{fill:none; stroke:#3f567a; stroke-width:1.5}
+.edge.flow{stroke-dasharray:6 7; animation:dash 1.1s linear infinite}
+.edge.flowr{stroke-dasharray:6 7; animation:dash 1.1s linear infinite reverse}
+@keyframes dash{to{stroke-dashoffset:-26}}
+.elabel{fill:#7c93b6; font-size:10.5px; text-anchor:middle; font-family:inherit}
+.node rect{fill:#13203a; stroke:#2b3d5c; stroke-width:1.1; transition:.2s}
+.node.src rect{stroke:rgba(251,191,36,.42)}
+.node.master rect{stroke:rgba(45,212,191,.6); fill:rgba(45,212,191,.10)}
+.node.bus rect{fill:rgba(56,189,248,.12); stroke:rgba(56,189,248,.65)}
+.node.load rect{fill:rgba(167,139,250,.10); stroke:rgba(167,139,250,.45)}
+.node.note rect{fill:transparent; stroke:rgba(45,212,191,.30); stroke-dasharray:5 5}
+.node.l3 rect{fill:rgba(96,165,250,.09); stroke:rgba(96,165,250,.45)}
+.node.l2 rect{fill:rgba(45,212,191,.09); stroke:rgba(45,212,191,.45)}
+.node.l1 rect{fill:rgba(251,191,36,.08); stroke:rgba(251,191,36,.4)}
+.ntitle{fill:#dfeafb; font-size:14px; font-weight:600; text-anchor:middle; font-family:inherit}
+.nsub{fill:#8299ba; font-size:11px; text-anchor:middle; font-family:inherit}
+/* ---------- side ---------- */
+.side{display:flex; flex-direction:column; gap:16px}
+.kpis{padding-bottom:14px}
+.kpi-grid{display:grid; grid-template-columns:1fr 1fr; gap:1px; background:var(--line); border-radius:11px; overflow:hidden; margin:12px 14px 0}
+.kpi{background:#0d1728; padding:12px 14px}
+.k-label{display:block; font-size:11px; color:var(--dim); letter-spacing:.3px}
+.k-val{display:flex; align-items:baseline; gap:5px; margin-top:3px}
+.k-val b{font-size:21px; font-weight:650; font-variant-numeric:tabular-nums; color:#eaf3ff; letter-spacing:.3px}
+.k-val i{font-style:normal; font-size:11px; color:var(--muted)}
+.k-sub{display:block; font-size:10.5px; color:var(--dim); margin-top:2px}
+.status{
+  display:flex; align-items:center; gap:8px; margin:12px 14px 0; padding:9px 12px;
+  border-radius:9px; font-size:12px; border:1px solid rgba(74,222,128,.3);
+  background:rgba(74,222,128,.07); color:#bdf7cf;
+}
+.status.warn{border-color:rgba(251,191,36,.35); background:rgba(251,191,36,.08); color:#ffe6a8}
+.status .sdot{width:6px; height:6px; border-radius:50%; background:currentColor}
+.controls{padding-bottom:14px}
+.btn-row{display:flex; gap:8px; flex-wrap:wrap; padding:12px 14px 0}
+.btn{
+  font-family:inherit; font-size:12.5px; cursor:pointer;
+  padding:9px 14px; border-radius:9px; transition:.16s;
+  border:1px solid var(--line2); background:#14233b; color:#c8d8f0;
+}
+.btn:hover{background:#1a2c49; border-color:#395176; color:#eaf3ff}
+.btn.primary{background:linear-gradient(180deg,#2dd4bf,#14b8a6); border-color:transparent; color:#04211d; font-weight:650}
+.btn.primary:hover{filter:brightness(1.06)}
+.btn.danger{border-color:rgba(251,113,133,.35); color:#ffc2cb; background:rgba(251,113,133,.08)}
+.btn.ghost{background:transparent}
+#paramBox{padding:4px 14px 0}
+.slider{display:block; padding:9px 0 3px}
+.sl-top{display:flex; align-items:baseline; gap:6px; font-size:11.5px; color:var(--muted)}
+.sl-top b{margin-left:auto; color:#dff3ff; font-size:12.5px; font-variant-numeric:tabular-nums}
+.sl-top i{font-style:normal; color:var(--dim); font-size:10.5px; min-width:38px; text-align:right}
+input[type=range]{
+  -webkit-appearance:none; appearance:none; width:100%; height:4px; margin:8px 0 2px;
+  border-radius:4px; background:#1b2b45; outline:none; cursor:pointer;
+}
+input[type=range]::-webkit-slider-thumb{
+  -webkit-appearance:none; width:14px; height:14px; border-radius:50%;
+  background:linear-gradient(180deg,#7cf5e6,#2dd4bf); border:2px solid #07231f;
+  box-shadow:0 0 0 3px rgba(45,212,191,.15); cursor:pointer;
+}
+input[type=range]::-moz-range-thumb{
+  width:12px; height:12px; border-radius:50%; background:#2dd4bf; border:2px solid #07231f;
+}
+.events{padding-bottom:10px}
+.event-list{list-style:none; margin:10px 14px 0; padding:0; display:flex; flex-direction:column; gap:6px; min-height:60px}
+.event-list li{
+  display:flex; gap:9px; align-items:flex-start; font-size:11.5px; line-height:1.45;
+  color:#b9c8de; padding:7px 10px; border-radius:8px; background:rgba(20,35,59,.55);
+  border-left:2px solid #33496b;
+}
+.event-list li.warn{border-left-color:var(--amber); color:#ffe6b0}
+.event-list li.danger{border-left-color:var(--red); color:#ffc9d2}
+.event-list li.ok{border-left-color:var(--green); color:#c3f8d2}
+.event-list li .et{color:var(--dim); font-variant-numeric:tabular-nums; flex:none; font-size:10.5px; padding-top:1px}
+.event-list li.empty{color:var(--dim); border-left-color:transparent; background:transparent}
+/* ---------- charts ---------- */
+.charts{grid-column:1/-1; display:grid; grid-template-columns:1.35fr 1fr 1fr; gap:1px; background:var(--line); overflow:hidden}
+.chart{background:#0c1626; padding:12px 14px 8px; min-width:0}
+.chart-head{display:flex; align-items:center; justify-content:space-between; gap:8px; margin-bottom:6px}
+.chart-head h3{font-size:12px; margin:0; font-weight:600; color:#c4d4ea; letter-spacing:.3px}
+.tag{font-size:10.5px; color:#8de9dc; background:rgba(45,212,191,.1); border:1px solid rgba(45,212,191,.22); padding:2px 8px; border-radius:999px; font-variant-numeric:tabular-nums}
+.canvas-box{position:relative; height:196px}
+canvas{display:block; width:100%; height:100%}
+/* ---------- notes ---------- */
+.notes{grid-column:1/-1; display:grid; grid-template-columns:repeat(3,1fr); gap:1px; background:var(--line); overflow:hidden}
+.note-col{background:#0c1626; padding:16px 18px}
+.note-col h4{margin:0 0 7px; font-size:12.5px; color:#bfe9ff; font-weight:600; letter-spacing:.3px}
+.note-col p{margin:0; font-size:11.8px; color:var(--muted); line-height:1.75}
+.note-col p b{color:#d7e6fb; font-weight:600}
+.note-col kbd{
+  font-family:inherit; font-size:10.5px; padding:1px 6px; border-radius:5px;
+  background:#16263f; border:1px solid var(--line2); color:#a9c2e2;
+}
+/* ---------- footer ---------- */
+footer{
+  max-width:1580px; margin:0 auto; padding:20px 22px 34px;
+  display:flex; justify-content:space-between; gap:14px; flex-wrap:wrap;
+  color:var(--dim); font-size:11.5px; border-top:1px solid rgba(31,47,73,.6);
+}
+footer .sig{color:#a9bdd9}
+footer .sig b{color:var(--cyan); font-weight:600}
+@media (max-width:1100px){
+  .wrap{grid-template-columns:1fr}
+  .charts{grid-template-columns:1fr}
+  .canvas-box{height:190px}
+  .notes{grid-template-columns:1fr}
+  .subbar-note{display:none}
+}
+@media (max-width:640px){
+  .topbar{padding:12px 14px; gap:10px}
+  .brand h1{font-size:14.5px}
+  .brand p{display:none}
+  .who{padding:0 6px 0 10px}
+  .tabsbar{padding:12px 12px 0}
+  .wrap{padding:12px 12px 24px}
+  .tab{padding:8px 11px; font-size:12px}
+}
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <div class="brand">
+    <div class="logo">MG</div>
+    <div>
+      <h1>微电网控制技术 · 虚拟仿真平台</h1>
+      <p>第二次大作业 ｜ 第四章 微电网控制技术：控制框图 → 交互界面 → 动态仿真</p>
+    </div>
+  </div>
+  <div class="who">
+    <div class="n">吴浩辉</div>
+    <div class="i">202410132011</div>
+  </div>
+  <div class="run-pill" id="runPill" title="点击暂停 / 继续仿真">
+    <span class="dot"></span><span id="runText">仿真运行中</span>
+  </div>
+</header>
+
+<div class="tabsbar">
+  <div class="tabs" id="tabs">
+    <button class="tab active" data-tab="inverter"><span class="idx">01</span><span>逆变器控制框图</span></button>
+    <button class="tab" data-tab="master"><span class="idx">02</span><span>主从控制结构</span></button>
+    <button class="tab" data-tab="peer"><span class="idx">03</span><span>对等控制结构</span></button>
+    <button class="tab" data-tab="hier"><span class="idx">04</span><span>分层控制结构</span></button>
+  </div>
+  <div class="subbar" id="subbar">
+    <span class="subbar-label">逆变器控制策略</span>
+    <button class="chip active" data-sub="pq">PQ 恒功率</button>
+    <button class="chip" data-sub="vf">V/f 恒压恒频</button>
+    <button class="chip" data-sub="droop">下垂控制</button>
+    <span class="subbar-note" id="subNote">有功 / 无功解耦，按指令输出恒定功率</span>
+  </div>
+</div>
+
+<main class="wrap">
+  <section class="card diagram-card">
+    <div class="card-head">
+      <h2 id="diagTitle">逆变器控制框图</h2>
+      <span class="hint">框图信号流 · 箭头代表控制/测量信号方向</span>
+    </div>
+    <div class="diagram-wrap" id="diagramWrap"></div>
+    <p class="caption" id="diagCaption"></p>
+  </section>
+
+  <aside class="side">
+    <section class="card kpis">
+      <div class="card-head"><h2>运行状态</h2><span class="hint">实时采样</span></div>
+      <div class="kpi-grid">
+        <div class="kpi">
+          <span class="k-label">系统频率</span>
+          <span class="k-val"><b id="kF">50.000</b><i>Hz</i></span>
+          <span class="k-sub" id="kFd">偏差 0.000 Hz</span>
+        </div>
+        <div class="kpi">
+          <span class="k-label">母线电压</span>
+          <span class="k-val"><b id="kV">1.000</b><i>pu</i></span>
+          <span class="k-sub" id="kVv">线电压 380 V</span>
+        </div>
+        <div class="kpi">
+          <span class="k-label">总负荷</span>
+          <span class="k-val"><b id="kL">90</b><i>kW</i></span>
+          <span class="k-sub">功率因数 0.95</span>
+        </div>
+        <div class="kpi">
+          <span class="k-label" id="kAlab">电源出力</span>
+          <span class="k-val"><b id="kA">0</b><i>kW</i></span>
+          <span class="k-sub" id="kA2">第二电源 —</span>
+        </div>
+      </div>
+      <div class="status" id="statusBar"><span class="sdot"></span><span id="statusText">系统稳定运行</span></div>
+    </section>
+
+    <section class="card controls">
+      <div class="card-head"><h2>仿真控制</h2><span class="hint" id="ctrlHint">PQ 模式</span></div>
+      <div class="btn-row">
+        <button class="btn primary" id="btnRun">暂停仿真</button>
+        <button class="btn danger" id="btnFault">三相短路故障</button>
+        <button class="btn" id="btnReset">复位</button>
+      </div>
+      <div class="btn-row">
+        <button class="btn ghost" id="btnLoadUp">投入 +20 kW 负荷</button>
+        <button class="btn ghost" id="btnLoadDown">切除 −20 kW</button>
+      </div>
+      <div id="paramBox"></div>
+    </section>
+
+    <section class="card events">
+      <div class="card-head"><h2>事件记录</h2><span class="hint">最近 8 条</span></div>
+      <ul class="event-list" id="eventList"></ul>
+    </section>
+  </aside>
+
+  <section class="card charts">
+    <div class="chart">
+      <div class="chart-head">
+        <h3>三相电压 / a 相电流波形</h3>
+        <span class="tag" id="waveTag">50.0 Hz · 1.000 pu</span>
+      </div>
+      <div class="canvas-box"><canvas id="cvWave"></canvas></div>
+    </div>
+    <div class="chart">
+      <div class="chart-head"><h3>有功功率（近 30 s）</h3><span class="tag" id="powerTag">kW</span></div>
+      <div class="canvas-box"><canvas id="cvPower"></canvas></div>
+    </div>
+    <div class="chart">
+      <div class="chart-head"><h3>系统频率（近 30 s）</h3><span class="tag" id="freqTag">50.00 Hz</span></div>
+      <div class="canvas-box"><canvas id="cvFreq"></canvas></div>
+    </div>
+  </section>
+
+  <section class="card notes">
+    <div class="note-col">
+      <h4>控制原理</h4>
+      <p id="notePrinciple">PQ 控制采用功率外环 + 电流内环双闭环结构：功率指令与实测功率比较后经 PI 调节生成电流指令，再经电流内环与 PWM 调制驱动逆变桥。适用于并网运行、按调度指令输出功率的场景。</p>
+    </div>
+    <div class="note-col">
+      <h4>仿真操作</h4>
+      <p>① 上方切换 <kbd>控制结构</kbd> 与 <kbd>控制策略</kbd>；② 拖动右侧滑块修改 <b>功率指令 / 下垂系数 / 负荷</b>；③ 点击 <b>投入负荷</b> 观察频率与功率重新分配；④ 点击 <b>三相短路故障</b> 观察电压跌落与恢复过程；⑤ 观察三条曲线与事件记录。</p>
+    </div>
+    <div class="note-col">
+      <h4>观察要点</h4>
+      <p id="noteObserve">PQ 模式下频率与电压由大电网支撑，负荷变化不影响逆变器输出功率；切换到 <b>下垂控制</b> 后，负荷增加将引起频率下降，且下垂系数越大频率偏差越大，体现“有功—频率”的下垂特性。</p>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div class="sig">微电网控制技术虚拟仿真平台 ｜ 课程大作业（第二次） ｜ <b>吴浩辉 · 202410132011</b></div>
+  <div>纯前端实现 · 无需联网即可运行 · 数据为教学演示模型</div>
+</footer>
+
+<script>
+(function(){
+'use strict';
+var $=function(s,r){return (r||document).querySelector(s);};
+var $$=function(s,r){return Array.prototype.slice.call((r||document).querySelectorAll(s));};
+var clamp=function(v,a,b){return Math.min(b,Math.max(a,v));};
+var fmt=function(v,d){return Number(v).toFixed(d===undefined?1:d);};
+
+/* ================= 状态 ================= */
+var state={
+  tab:'inverter', sub:'pq', running:true, t:0,
+  f:50, V:1, a:0, b:0, loadP:90, sec:0,
+  faultT:0,
+  params:{pRef:60, qRef:18, kp1:0.02, kp2:0.04, kq1:0.01, pSlave:50, loadBase:90, pMax:120},
+  hist:[], lastRec:0, events:[]
+};
+
+/* ================= 框图数据 ================= */
+var DIAGRAMS={
+  inverter:{
+    w:1020, h:430,
+    title:'逆变器典型控制框图',
+    nodes:[
+      {id:'in1',x:18, y:50, w:132,h:60, t:'功率指令', s:'P*, Q*', cls:'src'},
+      {id:'in2',x:182,y:50, w:118,h:60, t:'功率外环', s:'PI 解耦'},
+      {id:'in3',x:334,y:50, w:118,h:60, t:'电流内环', s:'PI 调节'},
+      {id:'in4',x:486,y:50, w:120,h:60, t:'dq / αβ 变换', s:'Park / Clarke'},
+      {id:'in5',x:640,y:50, w:104,h:60, t:'PWM 调制', s:'SPWM'},
+      {id:'in6',x:778,y:50, w:106,h:60, t:'三相逆变桥', s:'IGBT 开关'},
+      {id:'in7',x:918,y:50, w:86, h:60, t:'LC 滤波', s:'L + C'},
+      {id:'bus',x:920,y:196,w:82, h:56, t:'交流母线', s:'380 V', cls:'bus'},
+      {id:'mea',x:600,y:300,w:132,h:60, t:'电压电流测量', s:'abc → dq'},
+      {id:'lod',x:790,y:300,w:120,h:60, t:'本地负荷', s:'P + jQ', cls:'load'}
+    ],
+    edges:[
+      {p:[[150,80],[182,80]]},
+      {p:[[300,80],[334,80]]},
+      {p:[[452,80],[486,80]]},
+      {p:[[606,80],[640,80]]},
+      {p:[[744,80],[778,80]]},
+      {p:[[884,80],[918,80]]},
+      {p:[[961,110],[961,196]], flow:'flow'},
+      {p:[[920,224],[868,224],[868,330],[732,330]], flow:'flowr', label:'采样 u, i', lp:[812,318]},
+      {p:[[600,330],[241,330],[241,110]], flow:'flowr', label:'测量反馈', lp:[430,320]},
+      {p:[[393,330],[393,110]], flow:'flowr'},
+      {p:[[961,252],[961,272],[850,272],[850,300]], flow:'flow', label:'供电', lp:[906,290]}
+    ],
+    dots:[[393,330]],
+    cap:'PQ 控制框图：功率指令与实测功率比较后，经<b>功率外环</b>与<b>电流内环</b>双闭环调节，再通过 PWM 调制驱动逆变桥，经 LC 滤波后接入交流母线。'
+  },
+  master:{
+    w:1020, h:440,
+    title:'主从控制结构框图',
+    nodes:[
+      {id:'m1',x:40,y:36, w:214,h:74, t:'主逆变器', s:'V/f 控制 · 定压定频', cls:'master'},
+      {id:'m2',x:40,y:156,w:214,h:74, t:'从逆变器 1', s:'PQ 控制 · 25 kW', cls:'src'},
+      {id:'m3',x:40,y:276,w:214,h:74, t:'从逆变器 2', s:'PQ 控制 · 25 kW', cls:'src'},
+      {id:'bus',x:520,y:36,w:26,h:314, cls:'bus'},
+      {id:'bl', x:452,y:6, w:160,h:26, t:'交流母线 380V / 50Hz', cls:'plain'},
+      {id:'ld', x:660,y:160,w:200,h:86, t:'微电网负荷', s:'P_L + jQ_L', cls:'load'},
+      {id:'mea',x:270,y:360,w:200,h:60, t:'测量与状态监测', s:'f, V, P, Q'}
+    ],
+    edges:[
+      {p:[[254,73],[520,73]], flow:'flow'},
+      {p:[[254,193],[520,193]], flow:'flow'},
+      {p:[[254,313],[520,313]], flow:'flow'},
+      {p:[[546,200],[660,200]], flow:'flow', label:'P + jQ', lp:[602,190]},
+      {p:[[660,240],[620,240],[620,390],[470,390]], flow:'flowr'},
+      {p:[[270,390],[14,390],[14,73],[40,73]], flow:'flowr'},
+      {p:[[14,193],[40,193]], flow:'flowr'},
+      {p:[[14,313],[40,313]], flow:'flowr'}
+    ],
+    dots:[[14,193],[14,313]],
+    cap:'主从控制：<b>主逆变器</b>采用 V/f 控制为微电网建立电压与频率参考，<b>从逆变器</b>按 PQ 控制输出指定功率；负荷波动由主逆变器承担，因此主逆变器需留有足够容量裕度。'
+  },
+  peer:{
+    w:1020, h:420,
+    title:'对等控制结构框图',
+    nodes:[
+      {id:'p1',x:40,y:56, w:232,h:78, t:'DG1 · 下垂控制', s:'f = f0 − kp1·P1', cls:'src'},
+      {id:'p2',x:40,y:196,w:232,h:78, t:'DG2 · 下垂控制', s:'f = f0 − kp2·P2', cls:'src'},
+      {id:'bus',x:520,y:50,w:26,h:280, cls:'bus'},
+      {id:'bl', x:472,y:16,w:140,h:26, t:'交流母线', cls:'plain'},
+      {id:'ld', x:680,y:130,w:200,h:90, t:'公共负荷', s:'P_L + jQ_L', cls:'load'}
+    ],
+    edges:[
+      {p:[[272,95],[520,95]], flow:'flow'},
+      {p:[[272,235],[520,235]], flow:'flow'},
+      {p:[[546,190],[680,190]], flow:'flow', label:'P + jQ', lp:[612,180]}
+    ],
+    cap:'对等控制：各分布式电源均采用<b>下垂控制</b>，通过检测本地频率与电压偏差自主调节功率输出，无需通信即可实现功率分配；下垂系数决定各电源的功率分担比例。'
+  },
+  hier:{
+    w:1020, h:440,
+    title:'分层控制结构框图',
+    nodes:[
+      {id:'h3',x:40,y:30, w:920,h:76, t:'第三层 · 经济调度层（EMS）', s:'机组组合 · 最优潮流 · 分时电价优化（分钟级）', cls:'l3'},
+      {id:'h2',x:40,y:140,w:920,h:76, t:'第二层 · 二次控制层', s:'频率 / 电压恢复 · 功率均分校正（秒级）', cls:'l2'},
+      {id:'h1',x:40,y:250,w:920,h:76, t:'第一层 · 本地控制层', s:'下垂控制 / PQ 控制 / V-f 控制（毫秒级）', cls:'l1'},
+      {id:'ph',x:40,y:360,w:920,h:64, t:'微电网物理层', s:'分布式电源 · 储能 · 负荷 · 交流母线', cls:'load'}
+    ],
+    edges:[
+      {p:[[240,106],[240,140]], flow:'flow', label:'调度指令', lp:[186,127]},
+      {p:[[240,216],[240,250]], flow:'flow'},
+      {p:[[240,326],[240,360]], flow:'flow'},
+      {p:[[800,360],[800,326]], flow:'flowr'},
+      {p:[[800,250],[800,216]], flow:'flowr'},
+      {p:[[800,140],[800,106]], flow:'flowr', label:'测量 / 状态', lp:[866,127]}
+    ],
+    cap:'分层控制：<b>第三层</b>经济调度给出运行点，<b>第二层</b>恢复频率与电压偏差并校正功率均分，<b>第一层</b>本地控制实现毫秒级快速响应，层级之间通过通信交换指令与测量信息。'
+  }
+};
+
+var INV_VARIANTS={
+  pq:{
+    n1:{t:'功率指令', s:'P*, Q*'},
+    n2:{t:'功率外环', s:'PI 解耦'},
+    title:'逆变器典型控制框图 · PQ 控制',
+    note:'有功 / 无功解耦，按指令输出恒定功率',
+    cap:'PQ 控制框图：功率指令与实测功率比较后，经<b>功率外环</b>与<b>电流内环</b>双闭环调节，再通过 PWM 调制驱动逆变桥，经 LC 滤波后接入交流母线。',
+    principle:'PQ 控制采用功率外环 + 电流内环双闭环结构：功率指令与实测功率比较后经 PI 调节生成电流指令，再经电流内环与 PWM 调制驱动逆变桥。适用于并网运行、按调度指令输出功率的场景。',
+    observe:'PQ 模式下频率与电压由大电网支撑，负荷变化不影响逆变器输出功率；拖动“有功指令”滑块可直接改变并网功率。'
+  },
+  vf:{
+    n1:{t:'频率电压指令', s:'f*, V*'},
+    n2:{t:'电压外环', s:'PI 调节'},
+    title:'逆变器典型控制框图 · V/f 控制',
+    note:'维持频率与电压恒定，承担功率平衡',
+    cap:'V/f 控制框图：以频率与电压指令为参考，经<b>电压外环</b>与<b>电流内环</b>双闭环调节，使逆变器输出恒定频率与幅值的电压，负荷变化由该电源自动承担。',
+    principle:'V/f 控制由电压外环稳定输出电压幅值、由频率给定确定输出频率，内层电流环提高动态响应。孤岛运行时通常由主控单元采用 V/f 控制建立微电网电压和频率参考。',
+    observe:'V/f 模式下频率与电压保持恒定，负荷增加时逆变器输出功率随之增大；点击“投入负荷”可观察功率自动跟随。'
+  },
+  droop:{
+    n1:{t:'下垂控制', s:'f0 − kp·P'},
+    n2:{t:'电压合成', s:'V0 − kq·Q'},
+    title:'逆变器典型控制框图 · 下垂控制',
+    note:'模拟同步发电机外特性，实现自主均分',
+    cap:'下垂控制框图：根据有功 / 无功功率按<b>下垂特性</b>修正频率与电压参考，再经电压外环、电流内环和 PWM 调制输出，使多台逆变器无需通信即可按容量分配负荷。',
+    principle:'下垂控制模拟同步发电机的 P-f、Q-V 下垂特性：f = f0 − kp(P − P0)，V = V0 − kq(Q − Q0)。多机并联时各电源按下垂系数反比分配负荷，实现“即插即用”。',
+    observe:'观察频率随负荷变化：负荷越大频率越低；增大下垂系数 kp 后，相同负荷扰动引起的频率偏差更大，但功率分配更迅速。'
+  }
+};
+
+function currentDiagram(){
+  var d=DIAGRAMS[state.tab];
+  if(state.tab!=='inverter') return d;
+  var v=INV_VARIANTS[state.sub];
+  var nodes=d.nodes.map(function(n){
+    if(n.id==='in1') return Object.assign({},n,{t:v.n1.t,s:v.n1.s});
+    if(n.id==='in2') return Object.assign({},n,{t:v.n2.t,s:v.n2.s});
+    return n;
+  });
+  return {w:d.w,h:d.h,nodes:nodes,edges:d.edges,dots:d.dots,title:v.title,cap:v.cap};
+}
+
+/* ================= 框图渲染 ================= */
+function renderDiagram(){
+  var d=currentDiagram();
+  var s='<svg viewBox="0 0 '+d.w+' '+d.h+'" class="diagram-svg" role="img" aria-label="'+d.title+'">';
+  s+='<defs><marker id="arw" viewBox="0 0 10 10" refX="8.2" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto"><path d="M0,0 L10,5 L0,10 Z" fill="#5b769c"/></marker></defs>';
+  (d.edges||[]).forEach(function(e){
+    var pts=e.p.map(function(p){return p[0]+','+p[1];}).join(' L');
+    s+='<path class="edge '+(e.flow||'')+'" d="M'+pts+'" marker-end="url(#arw)"/>';
+    if(e.label && e.lp) s+='<text class="elabel" x="'+e.lp[0]+'" y="'+e.lp[1]+'">'+e.label+'</text>';
+  });
+  (d.dots||[]).forEach(function(p){ s+='<circle cx="'+p[0]+'" cy="'+p[1]+'" r="3.2" fill="#5b769c"/>'; });
+  (d.nodes||[]).forEach(function(n){
+    var cx=n.x+n.w/2, cy=n.y+n.h/2;
+    if(n.cls==='plain'){
+      s+='<text class="ntitle" x="'+cx+'" y="'+(cy+5)+'" style="font-size:12.5px">'+n.t+'</text>';
+      return;
+    }
+    s+='<g class="node '+(n.cls||'')+'">';
+    s+='<rect x="'+n.x+'" y="'+n.y+'" width="'+n.w+'" height="'+n.h+'" rx="10"/>';
+    if(n.t){
+      var dy=n.s?-3:5;
+      s+='<text class="ntitle" x="'+cx+'" y="'+(cy+dy)+'">'+n.t+'</text>';
+      if(n.s) s+='<text class="nsub" x="'+cx+'" y="'+(cy+15)+'">'+n.s+'</text>';
+    }
+    s+='</g>';
+  });
+  s+='</svg>';
+  $('#diagramWrap').innerHTML=s;
+  $('#diagramWrap').classList.toggle('paused', !state.running);
+  $('#diagTitle').textContent=d.title;
+  $('#diagCaption').innerHTML=d.cap;
+}
+
+/* ================= 仿真核心 ================= */
+function seriesMeta(){
+  if(state.tab==='master'){
+    return [
+      {key:'a', name:'主逆变器 (V/f)', color:'#2dd4bf'},
+      {key:'b', name:'从逆变器合计', color:'#fbbf24'}
+    ];
+  }
+  if(state.tab==='peer'||state.tab==='hier'){
+    return [
+      {key:'a', name:'DG1 出力', color:'#2dd4bf'},
+      {key:'b', name:'DG2 出力', color:'#fbbf24'}
+    ];
+  }
+  return [
+    {key:'a', name:'逆变器输出', color:'#2dd4bf'},
+    {key:'b', name:'并网参考', color:'#64748b'}
+  ];
+}
+
+function step(dt){
+  state.t+=dt;
+  if(state.faultT>0) state.faultT=Math.max(0,state.faultT-dt);
+
+  var load=state.loadP, P=state.params;
+  var fT=50, VT=1, aT=0, bT=0;
+
+  if(state.tab==='inverter'){
+    if(state.sub==='pq'){
+      aT=P.pRef; fT=50; VT=1;
+    }else if(state.sub==='vf'){
+      aT=load; fT=50; VT=1;
+    }else{
+      aT=load;
+      fT=50-P.kp1*(load-60);
+      VT=1-P.kq1*(load*0.3-20)*0.02;
+      VT=clamp(VT,0.9,1.05);
+    }
+  }else if(state.tab==='master'){
+    var slave=Math.min(P.pSlave, load*0.85);
+    aT=load-slave; bT=slave;
+    if(aT>P.pMax){
+      var over=aT-P.pMax; aT=P.pMax;
+      fT=50-0.4*Math.min(1.5,over/40);
+      VT=1-0.08*Math.min(1,over/40);
+    }
+  }else if(state.tab==='peer'){
+    var ksum=1/P.kp1+1/P.kp2;
+    var df=(load-80)/ksum;
+    fT=50-df;
+    aT=40+df/P.kp1;
+    bT=40+df/P.kp2;
+  }else if(state.tab==='hier'){
+    var ks=1/P.kp1+1/P.kp2;
+    state.sec=clamp(state.sec+0.35*(50-state.f)*dt, -1, 3);
+    var dfr=(load-80)/ks;
+    fT=50+state.sec-dfr;
+    aT=40+(50+state.sec-state.f)/P.kp1;
+    bT=40+(50+state.sec-state.f)/P.kp2;
+  }
+
+  fT=clamp(fT,48.4,51.6);
+  var al=1-Math.exp(-dt/0.30);
+  state.f+=(fT-state.f)*al;
+  state.V+=(VT-state.V)*al;
+  var be=1-Math.exp(-dt/0.15);
+  state.a+=(aT-state.a)*be;
+  state.b+=(bT-state.b)*be;
+
+  state.lastRec+=dt;
+  if(state.lastRec>=0.1){
+    state.lastRec=0;
+    state.hist.push({t:state.t, f:state.f, a:state.a, b:state.b, load:load});
+    if(state.hist.length>500) state.hist.shift();
+  }
+}
+
+/* ================= 绘图工具 ================= */
+function fit(cv){
+  var dpr=window.devicePixelRatio||1;
+  var w=Math.max(20,cv.clientWidth), h=Math.max(20,cv.clientHeight);
+  if(cv.width!==Math.floor(w*dpr)||cv.height!==Math.floor(h*dpr)){
+    cv.width=Math.floor(w*dpr); cv.height=Math.floor(h*dpr);
+  }
+  var ctx=cv.getContext('2d');
+  ctx.setTransform(dpr,0,0,dpr,0,0);
+  ctx.clearRect(0,0,w,h);
+  return {ctx:ctx,w:w,h:h};
+}
+function gridBg(ctx,w,h,pad,rows,cols){
+  ctx.strokeStyle='rgba(110,140,190,.09)'; ctx.lineWidth=1;
+  var i,y,x;
+  for(i=0;i<=rows;i++){
+    y=pad.t+(h-pad.t-pad.b)*i/rows;
+    ctx.beginPath(); ctx.moveTo(pad.l,y); ctx.lineTo(w-pad.r,y); ctx.stroke();
+  }
+  for(i=0;i<=cols;i++){
+    x=pad.l+(w-pad.l-pad.r)*i/cols;
+    ctx.beginPath(); ctx.moveTo(x,pad.t); ctx.lineTo(x,h-pad.b); ctx.stroke();
+  }
+}
+function legend(ctx,items){
+  var x=pad0.l+2, y=12;
+  ctx.font='10px "Segoe UI","Microsoft YaHei",sans-serif';
+  ctx.textAlign='left'; ctx.textBaseline='middle';
+  items.forEach(function(it){
+    ctx.fillStyle=it.c;
+    ctx.fillRect(x,y-3,8,3);
+    ctx.fillStyle='#8ea3c0';
+    ctx.fillText(it.n,x+12,y);
+    x+=ctx.measureText(it.n).width+30;
+  });
+}
+var pad0={l:34};
+
+/* ================= 波形图 ================= */
+function drawWave(){
+  var g=fit($('#cvWave')), ctx=g.ctx, w=g.w, h=g.h;
+  var f=clamp(state.f,45,55);
+  var vScale=state.V*(state.faultT>0?0.52:1);
+  var amp=Math.min(h*0.36, (h-40)/2);
+  var cy=h/2+2;
+  var dur=2/f;
+  ctx.strokeStyle='rgba(110,140,190,.35)'; ctx.lineWidth=1;
+  ctx.beginPath(); ctx.moveTo(0,cy); ctx.lineTo(w,cy); ctx.stroke();
+
+  var cols=['rgba(56,189,248,','rgba(56,189,248,','rgba(56,189,248,'];
+  var alphas=['0.95','0.42','0.2'];
+  for(var k=0;k<3;k++){
+    ctx.beginPath();
+    for(var x=0;x<=w;x+=1.5){
+      var tt=state.t-(dur*(1-x/w));
+      var ph=2*Math.PI*f*tt-k*2*Math.PI/3;
+      var y=cy-amp*vScale*Math.sin(ph);
+      if(x===0) ctx.moveTo(x,y); else ctx.lineTo(x,y);
+    }
+    ctx.strokeStyle=cols[k]+alphas[k]+')';
+    ctx.lineWidth=k===0?1.9:1.1;
+    ctx.stroke();
+  }
+  // 电流
+  var imax=clamp((state.a+state.b)/130,0.12,1.05);
+  ctx.beginPath();
+  for(var x2=0;x2<=w;x2+=1.5){
+    var t2=state.t-(dur*(1-x2/w));
+    var ph2=2*Math.PI*f*t2-Math.PI/6;
+    var y2=cy-amp*0.72*imax*Math.sin(ph2);
+    if(x2===0) ctx.moveTo(x2,y2); else ctx.lineTo(x2,y2);
+  }
+  ctx.strokeStyle='rgba(251,191,36,.9)'; ctx.lineWidth=1.3;
+  ctx.setLineDash([5,4]); ctx.stroke(); ctx.setLineDash([]);
+
+  ctx.font='10px "Segoe UI","Microsoft YaHei",sans-serif';
+  ctx.textAlign='left'; ctx.textBaseline='middle';
+  var lx=8, ly=12;
+  var items=[['u_a','#38bdf8'],['u_b','rgba(56,189,248,.5)'],['u_c','rgba(56,189,248,.3)'],['i_a','#fbbf24']];
+  items.forEach(function(it){
+    ctx.fillStyle=it[1]; ctx.fillRect(lx,ly-3,8,3);
+    ctx.fillStyle='#8ea3c0'; ctx.fillText(it[0],lx+11,ly);
+    lx+=ctx.measureText(it[0]).width+28;
+  });
+  ctx.textAlign='right';
+  ctx.fillStyle='#5f7391';
+  ctx.fillText('rms '+(state.V*380*(state.faultT>0?0.52:1)).toFixed(0)+' V',w-8,12);
+}
+
+/* ================= 功率图 ================= */
+function drawPower(){
+  var g=fit($('#cvPower')), ctx=g.ctx, w=g.w, h=g.h;
+  var pad={l:36,r:10,t:24,b:20};
+  var win=30;
+  var t1=Math.max(win,state.t), t0=t1-win;
+  var meta=seriesMeta();
+  var ymax=90;
+  state.hist.forEach(function(r){
+    ymax=Math.max(ymax,r.a,r.b,r.load);
+  });
+  ymax=Math.max(ymax*1.15,120);
+  gridBg(ctx,w,h,pad,4,6);
+  var mp=function(v){ return pad.t+(ymax-v)/ymax*(h-pad.t-pad.b); };
+  var mx=function(t){ return pad.l+(t-t0)/(t1-t0)*(w-pad.l-pad.r); };
+
+  // 负荷虚线
+  ctx.beginPath();
+  state.hist.forEach(function(r,i){
+    var x=mx(r.t), y=mp(clamp(r.load,0,ymax));
+    if(i===0) ctx.moveTo(x,y); else ctx.lineTo(x,y);
+  });
+  ctx.strokeStyle='rgba(148,163,184,.55)'; ctx.lineWidth=1.2;
+  ctx.setLineDash([4,4]); ctx.stroke(); ctx.setLineDash([]);
+
+  meta.forEach(function(m){
+    if(m.key==='b' && state.tab==='inverter') return;
+    ctx.beginPath();
+    var started=false;
+    state.hist.forEach(function(r){
+      var val=r[m.key];
+      if(val===undefined) return;
+      var x=mx(r.t), y=mp(clamp(val,0,ymax));
+      if(!started){ctx.moveTo(x,y);started=true;} else ctx.lineTo(x,y);
+    });
+    ctx.strokeStyle=m.color; ctx.lineWidth=2; ctx.lineJoin='round'; ctx.stroke();
+  });
+
+  // 图例
+  ctx.font='10px "Segoe UI","Microsoft YaHei",sans-serif';
+  ctx.textAlign='left'; ctx.textBaseline='middle';
+  var lx=pad.l+2, ly=12;
+  meta.forEach(function(m){
+    if(m.key==='b' && state.tab==='inverter') return;
+    ctx.fillStyle=m.color; ctx.fillRect(lx,ly-3,8,3);
+    ctx.fillStyle='#8ea3c0'; ctx.fillText(m.name,lx+11,ly);
+    lx+=ctx.measureText(m.name).width+26;
+  });
+  ctx.fillStyle='#64748b'; ctx.fillRect(lx,ly-3,8,3);
+  ctx.fillStyle='#8ea3c0'; ctx.fillText('负荷',lx+11,ly);
+
+  // y 轴
+  ctx.fillStyle='#5f7391'; ctx.textAlign='right'; ctx.textBaseline='middle';
+  for(var i=0;i<=4;i++){
+    var v=ymax*i/4;
+    ctx.fillText(v.toFixed(0),pad.l-6,mp(v));
+  }
+}
+
+/* ================= 频率图 ================= */
+function drawFreq(){
+  var g=fit($('#cvFreq')), ctx=g.ctx, w=g.w, h=g.h;
+  var pad={l:36,r:10,t:24,b:20};
+  var win=30;
+  var t1=Math.max(win,state.t), t0=t1-win;
+  var ymin=48.4, ymax=51.6;
+  gridBg(ctx,w,h,pad,4,6);
+  var mp=function(v){ return pad.t+(ymax-v)/(ymax-ymin)*(h-pad.t-pad.b); };
+  var mx=function(t){ return pad.l+(t-t0)/(t1-t0)*(w-pad.l-pad.r); };
+
+  // 允许带
+  ctx.fillStyle='rgba(74,222,128,.08)';
+  ctx.fillRect(pad.l,mp(50.2),w-pad.l-pad.r,mp(49.8)-mp(50.2));
+  ctx.strokeStyle='rgba(74,222,128,.28)'; ctx.lineWidth=1;
+  ctx.setLineDash([3,4]);
+  ctx.beginPath(); ctx.moveTo(pad.l,mp(50)); ctx.lineTo(w-pad.r,mp(50)); ctx.stroke();
+  ctx.setLineDash([]);
+
+  var grad=ctx.createLinearGradient(0,pad.t,0,h-pad.b);
+  grad.addColorStop(0,'rgba(45,212,191,.28)');
+  grad.addColorStop(1,'rgba(45,212,191,0)');
+  ctx.beginPath();
+  var started=false;
+  state.hist.forEach(function(r){
+    var x=mx(r.t), y=mp(r.f);
+    if(!started){ctx.moveTo(x,y);started=true;} else ctx.lineTo(x,y);
+  });
+  if(started){
+    var last=state.hist[state.hist.length-1];
+    ctx.lineTo(mx(last.t),h-pad.b);
+    var first=state.hist[0];
+    ctx.lineTo(mx(first.t),h-pad.b);
+    ctx.closePath();
+    ctx.fillStyle=grad; ctx.fill();
+
+    ctx.beginPath();
+    state.hist.forEach(function(r,i){
+      var x=mx(r.t), y=mp(r.f);
+      if(i===0) ctx.moveTo(x,y); else ctx.lineTo(x,y);
+    });
+    ctx.strokeStyle='#2dd4bf'; ctx.lineWidth=2; ctx.stroke();
+  }
+
+  ctx.fillStyle='#5f7391'; ctx.font='10px "Segoe UI","Microsoft YaHei",sans-serif';
+  ctx.textAlign='right'; ctx.textBaseline='middle';
+  ctx.fillText('51.6',pad.l-6,mp(51.6));
+  ctx.fillText('50.0',pad.l-6,mp(50.0));
+  ctx.fillText('48.4',pad.l-6,mp(48.4));
+
+  ctx.textAlign='left'; ctx.fillStyle='rgba(74,222,128,.55)';
+  ctx.fillText('±0.2 Hz 允许带',pad.l+4,mp(50.2)-7);
+}
+
+/* ================= UI ================= */
+function fmtTime(t){
+  var m=Math.floor(t/60), s=Math.floor(t%60);
+  return (m<10?'0':'')+m+':'+(s<10?'0':'')+s;
+}
+function logEvent(text,tone){
+  state.events.unshift({t:state.t,text:text,tone:tone||''});
+  if(state.events.length>8) state.events.pop();
+  renderEvents();
+}
+function renderEvents(){
+  var el=$('#eventList');
+  if(!state.events.length){ el.innerHTML='<li class="empty">暂无事件记录</li>'; return; }
+  el.innerHTML=state.events.map(function(e){
+    return '<li class="'+e.tone+'"><span class="et">'+fmtTime(e.t)+'</span><span>'+e.text+'</span></li>';
+  }).join('');
+}
+
+function sliderHTML(key,label,min,max,step,val,unit){
+  var dec=step<0.01?3:0;
+  return '<label class="slider"><span class="sl-top"><span>'+label+'</span>'+
+    '<b data-out="'+key+'">'+Number(val).toFixed(dec)+'</b><i>'+unit+'</i></span>'+
+    '<input type="range" data-key="'+key+'" min="'+min+'" max="'+max+'" step="'+step+'" value="'+val+'">'+
+    '</label>';
+}
+function renderParams(){
+  var P=state.params, html='';
+  if(state.tab==='inverter'){
+    if(state.sub==='pq'){
+      html+=sliderHTML('pRef','有功功率指令 P*',0,120,1,P.pRef,'kW');
+      html+=sliderHTML('qRef','无功功率指令 Q*',0,60,1,P.qRef,'kvar');
+    }else if(state.sub==='droop'){
+      html+=sliderHTML('kp1','有功下垂系数 kp',0.005,0.06,0.001,P.kp1,'Hz/kW');
+      html+=sliderHTML('kq1','无功下垂系数 kq',0.001,0.03,0.001,P.kq1,'pu/kvar');
+    }
+  }else if(state.tab==='master'){
+    html+=sliderHTML('pSlave','从机总出力',0,90,1,P.pSlave,'kW');
+  }else{
+    html+=sliderHTML('kp1','DG1 下垂系数 kp1',0.005,0.06,0.001,P.kp1,'Hz/kW');
+    html+=sliderHTML('kp2','DG2 下垂系数 kp2',0.005,0.06,0.001,P.kp2,'Hz/kW');
+  }
+  html+=sliderHTML('loadBase','负荷基准',40,140,1,state.loadP,'kW');
+  $('#paramBox').innerHTML=html;
+  $$('#paramBox input[type=range]').forEach(function(inp){
+    inp.addEventListener('input',function(){
+      var k=inp.getAttribute('data-key'), v=parseFloat(inp.value);
+      var out=inp.parentNode.querySelector('b');
+      if(k==='loadBase'){
+        state.loadP=v; state.params.loadBase=v;
+        out.textContent=v.toFixed(0);
+      }else{
+        state.params[k]=v;
+        out.textContent=v.toFixed(k.charAt(0)==='k'?3:0);
+      }
+    });
+  });
+}
+
+function updateUIText(){
+  var map={inverter:'逆变器控制框图',master:'主从控制结构',peer:'对等控制结构',hier:'分层控制结构'};
+  $$('.tab').forEach(function(b){ b.classList.toggle('active',b.getAttribute('data-tab')===state.tab); });
+  $('#subbar').classList.toggle('hidden',state.tab!=='inverter');
+  $$('.chip').forEach(function(b){ b.classList.toggle('active',b.getAttribute('data-sub')===state.sub); });
+  if(state.tab==='inverter'){
+    var v=INV_VARIANTS[state.sub];
+    $('#subNote').textContent=v.note;
+    $('#notePrinciple').textContent=v.principle;
+    $('#noteObserve').innerHTML=v.observe;
+  }else if(state.tab==='master'){
+    $('#notePrinciple').textContent='主从控制中，主逆变器采用 V/f 控制建立微电网电压与频率参考，从逆变器采用 PQ 控制按指令输出功率。负荷波动由主逆变器自动承担，因此需预留足够容量裕度。';
+    $('#noteObserve').innerHTML='增加负荷后观察：频率基本保持 50 Hz，<b>主逆变器出力</b>明显上升；当主逆变器超过容量限值（120 kW）时，频率与电压将出现跌落，说明主从控制对主电源容量的依赖性。';
+  }else if(state.tab==='peer'){
+    $('#notePrinciple').textContent='对等控制中所有分布式电源地位平等，均采用下垂控制：f = f0 − kp·P，V = V0 − kq·Q。负荷变化时各电源依据本地频率、电压偏差自动调整出力，无需通信即可实现功率分配。';
+    $('#noteObserve').innerHTML='投入负荷后：频率下降，两台 DG 出力同时增加；<b>下垂系数小的 DG 承担更多负荷</b>。改变 kp1 / kp2 可观察功率分配比例的变化，验证“按下垂系数反比分配”的规律。';
+  }else{
+    $('#notePrinciple').textContent='分层控制由经济调度层（分钟级）、二次控制层（秒级）与本地控制层（毫秒级）组成：一级下垂实现快速功率分配，二级通过积分调节恢复频率与电压偏差，三级优化经济运行点。';
+    $('#noteObserve').innerHTML='投入负荷后：频率先按下垂特性下降，随后<b>二次控制</b>逐渐将频率恢复至 50 Hz（观察频率曲线缓慢回升）。这是分层控制区别于纯下垂控制的关键特征。';
+  }
+  $('#ctrlHint').textContent=map[state.tab]+(state.tab==='inverter'?' · '+state.sub.toUpperCase():'');
+}
+
+function updateKPI(){
+  var f=state.f, V=state.V;
+  if(state.faultT>0){ V=V*0.52; }
+  $('#kF').textContent=f.toFixed(3);
+  $('#kFd').textContent='偏差 '+(f-50>=0?'+':'')+(f-50).toFixed(3)+' Hz';
+  $('#kV').textContent=(V).toFixed(3);
+  $('#kVv').textContent='线电压 '+(V*380).toFixed(0)+' V';
+  $('#kL').textContent=state.loadP.toFixed(0);
+  $('#kA').textContent=state.a.toFixed(0);
+  if(state.tab==='inverter'){
+    $('#kAlab').textContent='并网功率';
+    $('#kA2').textContent='功率因数 0.95';
+  }else if(state.tab==='master'){
+    $('#kAlab').textContent='主逆变器出力';
+    $('#kA2').textContent='从机合计 '+state.b.toFixed(0)+' kW';
+  }else{
+    $('#kAlab').textContent='DG1 出力';
+    $('#kA2').textContent='DG2 出力 '+state.b.toFixed(0)+' kW';
+  }
+
+  var dev=Math.abs(f-50);
+  var st=$('#statusBar'), tx=$('#statusText');
+  st.className='status';
+  if(state.faultT>0){ st.classList.add('warn'); tx.textContent='故障中：母线电压跌落，保护动作计时'; }
+  else if(dev>0.5){ st.classList.add('warn'); tx.textContent='频率偏差较大（'+dev.toFixed(2)+' Hz），请关注功率平衡'; }
+  else if(state.f>50.001){ tx.textContent='系统稳定运行 · 二次控制恢复中'; }
+  else{ tx.textContent='系统稳定运行'; }
+
+  $('#waveTag').textContent=f.toFixed(1)+' Hz · '+(V).toFixed(3)+' pu';
+  $('#freqTag').textContent=f.toFixed(2)+' Hz';
+  $('#powerTag').textContent='负荷 '+state.loadP.toFixed(0)+' kW';
+  $('#runPill').classList.toggle('off',!state.running);
+  $('#runText').textContent=state.running?'仿真运行中':'仿真已暂停';
+  $('#btnRun').textContent=state.running?'暂停仿真':'继续仿真';
+  $('#btnRun').classList.toggle('primary',!state.running);
+  $('#diagramWrap').classList.toggle('paused',!state.running);
+}
+
+/* ================= 主循环 ================= */
+var last=performance.now();
+function frame(now){
+  var dt=Math.min(0.06,(now-last)/1000);
+  last=now;
+  if(state.running) step(dt);
+  updateKPI();
+  drawWave();
+  drawPower();
+  drawFreq();
+  requestAnimationFrame(frame);
+}
+
+/* ================= 事件绑定 ================= */
+function resetSim(keepEvents){
+  state.t=0; state.f=50; state.V=1; state.a=0; state.b=0;
+  state.sec=0; state.faultT=0; state.hist=[]; state.lastRec=0;
+  if(!keepEvents) state.events=[];
+}
+
+function setTab(tab){
+  state.tab=tab;
+  if(tab==='inverter') state.sub='pq';
+  resetSim(true);
+  updateUIText();
+  renderParams();
+  renderDiagram();
+  renderEvents();
+  logEvent('切换至 '+({inverter:'逆变器控制框图',master:'主从控制',peer:'对等控制',hier:'分层控制'})[tab],'ok');
+}
+function setSub(sub){
+  state.sub=sub;
+  resetSim(true);
+  updateUIText();
+  renderParams();
+  renderDiagram();
+  logEvent('切换控制策略：'+sub.toUpperCase(),'ok');
+}
+function setLoad(v,msg){
+  state.loadP=clamp(v,20,180);
+  state.params.loadBase=state.loadP;
+  renderParams();
+  if(msg) logEvent(msg, v>90?'warn':'');
+}
+
+$('#tabs').addEventListener('click',function(e){
+  var b=e.target.closest('.tab');
+  if(b) setTab(b.getAttribute('data-tab'));
+});
+$('#subbar').addEventListener('click',function(e){
+  var b=e.target.closest('.chip');
+  if(b) setSub(b.getAttribute('data-sub'));
+});
+$('#runPill').addEventListener('click',function(){
+  state.running=!state.running;
+  updateKPI();
+  logEvent(state.running?'恢复仿真运行':'仿真已暂停','ok');
+});
+$('#btnRun').addEventListener('click',function(){
+  state.running=!state.running;
+  updateKPI();
+  logEvent(state.running?'恢复仿真运行':'仿真已暂停','ok');
+});
+$('#btnFault').addEventListener('click',function(){
+  state.faultT=1.8;
+  logEvent('发生三相短路故障：母线电压跌落约 48%，持续 1.8 s','danger');
+});
+$('#btnReset').addEventListener('click',function(){
+  state.loadP=state.params.loadBase=90;
+  resetSim(false);
+  renderParams();
+  updateKPI();
+  logEvent('仿真已复位','ok');
+});
+$('#btnLoadUp').addEventListener('click',function(){
+  var before=state.loadP;
+  setLoad(state.loadP+20,(before+20>180?'负荷已达上限':'投入 20 kW 负荷 → 当前 '+Math.min(180,before+20)+' kW'));
+});
+$('#btnLoadDown').addEventListener('click',function(){
+  var before=state.loadP;
+  setLoad(state.loadP-20,(before-20<20?'负荷已达下限':'切除 20 kW 负荷 → 当前 '+Math.max(20,before-20)+' kW'));
+});
+
+/* ================= 启动 ================= */
+renderParams();
+renderDiagram();
+updateUIText();
+renderEvents();
+logEvent('仿真平台就绪，初始负荷 90 kW','ok');
+requestAnimationFrame(frame);
+
+})();
+</script>
+</body>
+</html>

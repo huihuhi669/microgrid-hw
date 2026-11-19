@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="author" content="吴浩辉 202410132011">
+<title>微电网课程大作业 · 吴浩辉 202410132011</title>
+<style>
+:root{
+  --bg:#070d18; --card:#0e1829; --line:#20314c; --text:#e8eef9;
+  --muted:#93a5c0; --dim:#5f7391; --cyan:#2dd4bf; --sky:#38bdf8; --violet:#a78bfa;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{
+  min-height:100vh; color:var(--text);
+  background:
+    radial-gradient(1000px 520px at 12% -10%, rgba(45,212,191,.12), transparent 60%),
+    radial-gradient(900px 500px at 92% 0%, rgba(96,165,250,.12), transparent 55%),
+    var(--bg);
+  font-family:"Segoe UI","Microsoft YaHei","PingFang SC",system-ui,sans-serif;
+  -webkit-font-smoothing:antialiased;
+  display:flex; flex-direction:column;
+}
+header{max-width:1100px; width:100%; margin:0 auto; padding:46px 26px 10px}
+.kicker{font-size:12px; letter-spacing:3px; color:var(--cyan); text-transform:uppercase}
+h1{font-size:30px; margin:10px 0 6px; font-weight:650; letter-spacing:.5px}
+header p{margin:2px 0; color:var(--muted); font-size:13.5px}
+.idtag{
+  display:inline-flex; gap:10px; align-items:center; margin-top:16px; padding:8px 16px;
+  border:1px solid rgba(45,212,191,.3); border-radius:999px; background:rgba(45,212,191,.07);
+  font-size:13px; color:#c7f7f0;
+}
+.idtag b{font-weight:650; letter-spacing:1px}
+main{max-width:1100px; width:100%; margin:0 auto; padding:26px 26px 20px; display:grid; grid-template-columns:1fr 1fr; gap:18px; flex:1; align-content:start}
+a.card{
+  display:block; text-decoration:none; color:inherit; position:relative; overflow:hidden;
+  padding:26px 26px 22px; border-radius:16px; border:1px solid var(--line);
+  background:linear-gradient(160deg, rgba(18,32,56,.9), rgba(10,18,32,.95));
+  transition:transform .22s, border-color .22s, box-shadow .22s;
+}
+a.card:hover{transform:translateY(-3px); border-color:#39557d; box-shadow:0 18px 40px rgba(0,0,0,.4)}
+a.card::after{
+  content:""; position:absolute; inset:auto -30% -60% auto; width:260px; height:260px;
+  background:radial-gradient(circle, rgba(45,212,191,.18), transparent 65%);
+  opacity:0; transition:.3s;
+}
+a.card:hover::after{opacity:1}
+.card .num{font-size:11px; color:var(--dim); letter-spacing:2px}
+.card h2{font-size:20px; margin:10px 0 8px; font-weight:650}
+.card p{font-size:12.8px; line-height:1.7; color:var(--muted); margin:0 0 18px; min-height:66px}
+.chips{display:flex; gap:6px; flex-wrap:wrap; margin-bottom:20px}
+.chip{font-size:11px; padding:4px 9px; border-radius:6px; background:rgba(56,189,248,.1); border:1px solid rgba(56,189,248,.2); color:#a9d8f7}
+.chip.g{background:rgba(45,212,191,.09); border-color:rgba(45,212,191,.2); color:#a8ece2}
+.go{display:inline-flex; align-items:center; gap:8px; font-size:13px; color:var(--cyan); font-weight:600}
+.go span{transition:.2s}
+a.card:hover .go span{transform:translateX(4px)}
+footer{max-width:1100px; width:100%; margin:0 auto; padding:20px 26px 40px; color:var(--dim); font-size:11.5px; line-height:1.7}
+@media (max-width:800px){ main{grid-template-columns:1fr} h1{font-size:23px} }
+</style>
+</head>
+<body>
+<header>
+  <div class="kicker">Microgrid Course Projects</div>
+  <h1>微电网课程大作业</h1>
+  <p>第四章 微电网控制技术 · 框图交互仿真</p>
+  <p>微电网能量管理技术 · EMS 运行调度仿真</p>
+  <div class="idtag">姓名 <b>吴浩辉</b> ｜ 学号 <b>202410132011</b></div>
+</header>
+
+<main>
+  <a class="card" href="hw2-control/">
+    <div class="num">ASSIGNMENT 02</div>
+    <h2>微电网控制技术虚拟仿真平台</h2>
+    <p>把第四章的控制框图转化为可交互界面：逆变器 PQ / V-f / 下垂控制、主从控制、对等控制与分层控制，实时波形与频率动态仿真。</p>
+    <div class="chips"><span class="chip">控制框图</span><span class="chip">双闭环</span><span class="chip g">动态仿真</span></div>
+    <div class="go">进入仿真平台 <span>→</span></div>
+  </a>
+
+  <a class="card" href="hw3-ems/">
+    <div class="num">ASSIGNMENT 03</div>
+    <h2>微电网能量管理系统（EMS）</h2>
+    <p>源—储—荷协调调度界面：24 小时功率平衡、储能 SoC 管理、分时电价下的经济调度、新能源消纳与孤岛保供仿真。</p>
+    <div class="chips"><span class="chip">EMS 界面</span><span class="chip">能量调度</span><span class="chip g">24h 仿真</span></div>
+    <div class="go">进入 EMS 平台 <span>→</span></div>
+  </a>
+</main>
+
+<footer>吴浩辉 · 202410132011 ｜ 所有页面为纯前端静态网站，可长期访问与离线运行。</footer>
+</body>
+</html>
