@@ -77,6 +77,7 @@ body{
 .kpi.warn b{color:#ffd98a}
 /* topology */
 .topo-card{padding-bottom:6px; display:flex; flex-direction:column}
+.topo-scroll{width:100%; overflow-x:auto; flex:1; display:flex; align-items:center}
 .topo-svg{width:100%; max-width:100%; height:auto; display:block; padding:4px 6px 0; margin:auto 0; min-width:0}
 .bus-line{stroke:rgba(56,189,248,.55); stroke-width:3; stroke-linecap:round}
 .bus-label{fill:#6e8bb0; font-size:11px; text-anchor:middle; font-family:inherit}
@@ -179,6 +180,7 @@ footer .sig b{color:var(--sky); font-weight:600}
   .who{padding:0 6px 0 10px}
   .wrap{padding:12px 12px 24px}
   .kpi-strip{grid-template-columns:repeat(2,1fr)}
+  .topo-svg{min-width:620px}
   .arch{flex-direction:column}
   .arch-arrow{transform:rotate(90deg); align-self:center}
 }
@@ -240,6 +242,7 @@ footer .sig b{color:var(--sky); font-weight:600}
       <h2>微电网拓扑与实时功率流</h2>
       <span class="hint" id="topoHint">在线数据 · 每分钟更新</span>
     </div>
+    <div class="topo-scroll">
     <svg viewBox="0 0 940 430" class="topo-svg" role="img" aria-label="微电网拓扑">
       <path class="bus-line" d="M110,215 H830"/>
       <text class="bus-label" x="470" y="242">交流母线 380 V / 50 Hz</text>
@@ -285,6 +288,7 @@ footer .sig b{color:var(--sky); font-weight:600}
         <text class="t-val" id="v-load" x="780" y="350">0 kW</text>
       </g>
     </svg>
+    </div>
   </section>
 
   <aside class="side">
