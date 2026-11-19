@@ -103,6 +103,7 @@ a{color:var(--cyan)}
   display:grid; grid-template-columns:minmax(0,1.62fr) minmax(330px,.88fr);
   gap:16px; align-items:stretch;
 }
+.wrap > *{min-width:0}
 .card{
   background:linear-gradient(180deg, rgba(16,28,47,.85), rgba(11,19,33,.9));
   border:1px solid var(--line); border-radius:var(--radius);
@@ -117,7 +118,7 @@ a{color:var(--cyan)}
 .diagram-card{padding-bottom:8px; overflow:hidden; display:flex; flex-direction:column}
 .diagram-wrap{padding:10px 10px 0; transition:.3s; flex:1; display:flex; align-items:center}
 .diagram-wrap.paused .edge{animation-play-state:paused}
-.diagram-svg{width:100%; height:auto; display:block}
+.diagram-svg{width:100%; max-width:100%; height:auto; display:block; min-width:0}
 .caption{margin:6px 18px 12px; font-size:12px; color:var(--muted); line-height:1.6}
 .caption b{color:#c9e3ff; font-weight:600}
 /* svg */
